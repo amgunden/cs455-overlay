@@ -10,6 +10,7 @@ import cs455.overlay.wireformats.Event;
 
 public class MessagingNode implements Node{
 	
+	int nodeID;
 
 	public MessagingNode(int portNum) throws IOException {
 		// TODO Auto-generated constructor stub
