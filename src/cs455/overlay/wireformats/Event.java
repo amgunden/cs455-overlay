@@ -4,5 +4,5 @@ public interface Event {
 
 	// getType();
 	
-	// getBytes();
+	// getBytes();  -- to be used for marshaling data (pack fields into byte array)
 }
