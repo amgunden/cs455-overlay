@@ -1,14 +1,7 @@
 package cs455.overlay.node;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.HashMap;
 
-public class Registry {
-	
-	HashMap<Integer, Socket> clientSockets = new HashMap<Integer, Socket>();
-	
+public class Registry implements Node{
 	
 
 	public Registry() {
@@ -18,32 +11,16 @@ public class Registry {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
-		// Read in port number from arguments
-		int portNum = Integer.parseInt(args[0]);
 
-		
-		try {
-			ServerSocket serverSocket = new ServerSocket(portNum);
-			Socket clientSocket = serverSocket.accept();
+	}
 
-			
-		}catch(IOException exception) {
-			
-		}finally {
-			
-		}
-		
+	@Override
+	public void onEvent() {
+		// TODO Auto-generated method stub
 		
 	}
 	
-	private void acceptConnection(Socket clientSocket) {
-		
-		// assign ID to socket
-		Integer id = 0;
-		// add id, socket to the hashmap
-		clientSockets.put(id, clientSocket);
-		
-	}
+
 	
 	
 

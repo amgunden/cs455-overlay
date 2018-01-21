@@ -1,17 +1,34 @@
 package cs455.overlay.node;
 
-public class MessagingNode {
-	
-	int nodeID;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class MessagingNode implements Node{
 	
 
-	public MessagingNode() {
+	public MessagingNode(int portNum) throws IOException {
 		// TODO Auto-generated constructor stub
+		
+
+	}
+	
+	public static void main(String[] args) throws IOException {
+
+
+		
 	}
 
-	public static void main(String[] args) {
+	@Override
+	public void onEvent() {
 		// TODO Auto-generated method stub
-
+		
 	}
+	
+
+	
+
 
 }
