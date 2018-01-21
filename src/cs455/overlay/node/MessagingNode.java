@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import cs455.overlay.wireformats.Event;
+
 public class MessagingNode implements Node{
 	
 
@@ -22,7 +24,7 @@ public class MessagingNode implements Node{
 	}
 
 	@Override
-	public void onEvent() {
+	public void onEvent(Event event) {
 		// TODO Auto-generated method stub
 		
 	}

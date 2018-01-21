@@ -1,5 +1,6 @@
 package cs455.overlay.node;
 
+import cs455.overlay.wireformats.Event;
 
 public class Registry implements Node{
 	
@@ -15,7 +16,7 @@ public class Registry implements Node{
 	}
 
 	@Override
-	public void onEvent() {
+	public void onEvent(Event event) {
 		// TODO Auto-generated method stub
 		
 	}
