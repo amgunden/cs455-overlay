@@ -10,7 +10,7 @@ public class TCPReceiverThread {
 	private Socket socket;
 	private DataInputStream din;
 
-	public TCPReceiverThread() throws IOException {
+	public TCPReceiverThread(Socket socket) throws IOException {
 
 		this.socket = socket;
 		din = new DataInputStream(socket.getInputStream());
