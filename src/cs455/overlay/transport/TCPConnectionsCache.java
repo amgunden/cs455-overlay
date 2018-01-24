@@ -8,6 +8,8 @@ import java.util.HashMap;
 
 public class TCPConnectionsCache {
 	
+	
+	// Integer represents nodeID
 	HashMap<Integer, TCPConnection> clientConnections = new HashMap<Integer, TCPConnection>();
 
 	private TCPConnectionsCache() {

@@ -4,5 +4,5 @@ public interface Event {
 
 	// getType();
 	
-	// getBytes();
+	 byte[] getBytes();
 }
