@@ -70,9 +70,7 @@ public class TCPServerThread implements Runnable{
 				int newNodeID = generateUniqueID();
 
 				// Save  to TCPConnectionsCache hashmap
-				TCPConnection connectionToStore = new TCPConnection(newNodeID, clientAddr, clientSocket.getPort(),
-						clientSocket);
-				TCPConnectionsCache.getInstance().clientConnections.put(newNodeID, connectionToStore);
+				TCPConnectionsCache.getInstance().addConnectionToCache(newNodeID, clientAddr, clientSocket, clientSocket.getPort());
 
 			} 
 		} catch (IOException e) {

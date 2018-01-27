@@ -12,4 +12,10 @@ public class OverlayNodeReportsTaskFinished  implements Event{
 		return null;
 	}
 
+	@Override
+	public int getType() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

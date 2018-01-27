@@ -1,15 +1,19 @@
 package cs455.overlay.wireformats;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class OverlayNodeSendsRegistration  implements Event{
 	
 	private int type;
-	private InetAddress inetAddress;
+	private byte[] inetAddress;
 	private int port;
 	
 
@@ -18,13 +22,41 @@ public class OverlayNodeSendsRegistration  implements Event{
 //	private int tracker;
 
 
-	public OverlayNodeSendsRegistration() {
-		// TODO Auto-generated constructor stub
+	public OverlayNodeSendsRegistration(InetAddress inetAddr, int port) {
+		// Constructor used to create message to send
 		identifier = "OVERLAY_NODE_SENDS_REGISTRATION";
 		type = Protocol.OVERLAY_NODE_SENDS_REGISTRATION;
 		
+		inetAddress = inetAddr.getAddress();
+		this.port = port;
 		
+	}
+	
+	public OverlayNodeSendsRegistration(byte[] message) throws IOException {
+		// Constructor used to create message from received bytes
+		identifier = "OVERLAY_NODE_SENDS_REGISTRATION";
+		type = Protocol.OVERLAY_NODE_SENDS_REGISTRATION;
 		
+		extractMessage(message);
+	}
+	
+	public void extractMessage(byte[] message) throws IOException {
+		
+		ByteArrayInputStream baInputStream = new ByteArrayInputStream(message);
+		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
+		
+		type = din.readInt();
+		
+		int identifierLength = din.readInt();
+		byte[] identifierBytes = new byte[identifierLength];
+		din.readFully(identifierBytes);
+		
+		inetAddress = identifierBytes;
+		
+		port = din.readInt();
+		
+		baInputStream.close();
+		din.close();
 	}
 
 	@Override
@@ -47,7 +79,7 @@ public class OverlayNodeSendsRegistration  implements Event{
 			
 			dout.writeInt(type);
 			
-			byte[] inetAddrBytes = inetAddress.getAddress();
+			byte[] inetAddrBytes = inetAddress;
 			int elementLength = inetAddrBytes.length;
 			
 			dout.writeInt(elementLength);
@@ -69,6 +101,22 @@ public class OverlayNodeSendsRegistration  implements Event{
 		return marshalledBytes;
 		
 		
+	}
+
+	@Override
+	public int getType() {
+
+		return type;
+	}
+	
+	public InetAddress getInetAddress() throws UnknownHostException {
+		InetAddress temp = InetAddress.getByAddress(inetAddress);
+		
+		return temp;
+	}
+	
+	public int getPort() {
+		return port;
 	}
 
 }
