@@ -19,24 +19,6 @@ public class TCPServerThread implements Runnable{
 		
 	}
 	
-	public int generateUniqueID() {
-		
-		Random random = new Random();
-		
-		// Generate int between 0 - 127
-		int id = random.nextInt(128);
-		
-		// Test if random int is a Key in the HashMap
-		// if it is then a new number is generated and the while loop runs again
-		while( TCPConnectionsCache.getInstance().clientConnections.containsKey(id)) {
-			id = random.nextInt(128);
-		}
-		
-		//return unique random number
-		return id;
-		
-	}
-
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
@@ -46,15 +28,24 @@ public class TCPServerThread implements Runnable{
 			while (true) {
 
 				Socket clientSocket = serverSocket.accept();
+				int port = clientSocket.getPort();
+				InetAddress inetAddr = clientSocket.getInetAddress();
 				
 				String clientAddress = clientSocket.getInetAddress().getHostAddress();
 		        System.out.println("\r\nNew connection from " + clientAddress);
+		        
+		        TCPConnectionsCache.getInstance().addTCPConnection(inetAddr, clientSocket, port);
+		        
+
 				
+		        /*
+		         * 
+		         
 				InetAddress clientAddr = clientSocket.getInetAddress();
 				// ERROR CHECK
 				// The registry issues an error message under two circumstances:
 				//	• If the node had previously registered and has a valid entry in its registry.
-				if (TCPConnectionsCache.getInstance().ipAddressExists(clientAddr)) {
+				if (TCPConnectionsCache.getInstance().connectionFromIpAddress(clientAddr) == null) {
 
 					// The IP Address is already in the connections list 
 					// Send error
@@ -69,9 +60,13 @@ public class TCPServerThread implements Runnable{
 				// ensuring that there are no duplicate IDs being assigned.
 				int newNodeID = generateUniqueID();
 
+				System.out.println("New node ID is: " + newNodeID);
+				
 				// Save  to TCPConnectionsCache hashmap
-				TCPConnectionsCache.getInstance().addConnectionToCache(newNodeID, clientAddr, clientSocket, clientSocket.getPort());
-
+				TCPConnectionsCache.getInstance().addConnectionToCache(null, clientAddr, clientSocket, clientSocket.getPort());
+				*/
+				
+				
 			} 
 		} catch (IOException e) {
 			// TODO: handle exception

@@ -56,9 +56,9 @@ public class TCPConnection {
 	}
 
 
-	public TCPConnection(int nodeID, InetAddress inetAddr, Socket socket, int port) throws IOException {
+	public TCPConnection(InetAddress inetAddr, Socket socket, int port) throws IOException {
 		// TODO Auto-generated constructor stub
-		this.nodeID = nodeID;
+		
 		this.inetAddress = inetAddr;
 		this.port = port;
 		this.socket = socket;

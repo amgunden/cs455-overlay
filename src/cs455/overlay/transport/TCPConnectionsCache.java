@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import cs455.overlay.node.Node;
@@ -12,8 +13,10 @@ import cs455.overlay.node.Node;
 
 public class TCPConnectionsCache {
 	
+	// Sockets created, unknown info about socket, holding until message is received about what node on the other side
+	ArrayList<TCPConnection> existingTCPConnections = new ArrayList<TCPConnection>();
 	
-	// Integer represents nodeID
+	// Integer represents nodeID, once a socket is known and associated with a certain node it is moved to clientConnections
 	HashMap<Integer, TCPConnection> clientConnections = new HashMap<Integer, TCPConnection>();
 	
 	//Node node;
@@ -32,31 +35,37 @@ public class TCPConnectionsCache {
 		return TCPConnectionsCacheHolder.INSTANCE;
 	}
 	
-	public boolean ipAddressExists(InetAddress inetAddress) {
+	public HashMap<Integer, TCPConnection> getClientConnections() {
+		return clientConnections;
+	}
+	
+	public ArrayList<TCPConnection> getExistingSockets() {
+		return existingTCPConnections;
+	}
+	
+	public TCPConnection getTCPConByIpAddr(InetAddress inetAddress) {
 		
-		// Iterate through clientConnections HashMap and get InetAddress
-		// Compare address to argument
+		TCPConnection tcpConnection = null;
 		
-		for( TCPConnection clientConnection : clientConnections.values() ) {
-			if(clientConnection.getInetAddress().equals(inetAddress)) {
-				return true;
+		for( TCPConnection con : existingTCPConnections) {
+			if( con.inetAddress.equals(inetAddress)) {
+				tcpConnection = con;
 			}
 		}
 		
-		return false;
-		
+		return tcpConnection;
 	}
 	
-	public Socket createNewConnection(int nodeID, String host, int port) {
+	
+	public Socket createTCPConnection(String host, int port) {
 		
 		// TO-DO Need Error checking so connection isn't made to node that already has established connection
 		
 		try {
 			
 			Socket newConnection = new Socket(host, port);
-			addConnectionToCache(nodeID, newConnection.getInetAddress(), newConnection, port);
+			addTCPConnection(newConnection.getInetAddress(), newConnection, port);
 			return newConnection;
-			
 			
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -70,19 +79,7 @@ public class TCPConnectionsCache {
 		
 	}
 	
-	public void addConnectionToCache(Integer nodeID, InetAddress clientAddr, Socket socket, int port) {
 		
-		try {
-			
-			clientConnections.put(nodeID, new TCPConnection(nodeID, clientAddr, socket, port));
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
-	
 	public void sendMessage(int nodeID, byte[] msg) {
 		
 		try {
@@ -96,6 +93,35 @@ public class TCPConnectionsCache {
 		
 		
 	}
+	
+	public void addTCPConnection(InetAddress inetAddr, Socket client, int port) throws IOException {
+		
+		TCPConnection newTCP = new TCPConnection(inetAddr, client, port);
+		existingTCPConnections.add(newTCP);
+	}
+	
+	public TCPConnection getClientByIpAddr(InetAddress inetAddress) {
+		
+		// Iterate through clientConnections HashMap and get InetAddress
+		// Compare address to argument
+		
+		TCPConnection tcpConnection = null;
+		
+		for( TCPConnection clientConnection : clientConnections.values() ) {
+			if(clientConnection.getInetAddress().equals(inetAddress)) {
+				tcpConnection = clientConnection;
+			}
+			
+		}
+		
+		return tcpConnection;
+		
+	}
+	
+	public void addClientConnection(int key, TCPConnection tcpCon) {
+		clientConnections.put(key, tcpCon);
+	}
+	
 	
 //	public void setNode(Node node) {
 //		this.node = node;

@@ -39,7 +39,7 @@ public class EventFactory {
 			//return new OverlayNodeSendsRegistration(incomingMessage);
 		}
 		else if(type == 3) {
-			node.onEvent( new RegistryReportsRegistrationStatus() );
+			node.onEvent( new RegistryReportsRegistrationStatus(incomingMessage) );
 			//return new RegistryReportsRegistrationStatus();
 		}
 		else if(type == 4) {

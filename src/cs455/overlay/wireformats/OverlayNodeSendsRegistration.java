@@ -12,7 +12,7 @@ import java.net.UnknownHostException;
 
 public class OverlayNodeSendsRegistration  implements Event{
 	
-	private int type;
+	private int messageType;
 	private byte[] inetAddress;
 	private int port;
 	
@@ -25,7 +25,7 @@ public class OverlayNodeSendsRegistration  implements Event{
 	public OverlayNodeSendsRegistration(InetAddress inetAddr, int port) {
 		// Constructor used to create message to send
 		identifier = "OVERLAY_NODE_SENDS_REGISTRATION";
-		type = Protocol.OVERLAY_NODE_SENDS_REGISTRATION;
+		messageType = Protocol.OVERLAY_NODE_SENDS_REGISTRATION;
 		
 		inetAddress = inetAddr.getAddress();
 		this.port = port;
@@ -35,7 +35,7 @@ public class OverlayNodeSendsRegistration  implements Event{
 	public OverlayNodeSendsRegistration(byte[] message) throws IOException {
 		// Constructor used to create message from received bytes
 		identifier = "OVERLAY_NODE_SENDS_REGISTRATION";
-		type = Protocol.OVERLAY_NODE_SENDS_REGISTRATION;
+		messageType = Protocol.OVERLAY_NODE_SENDS_REGISTRATION;
 		
 		extractMessage(message);
 	}
@@ -45,13 +45,13 @@ public class OverlayNodeSendsRegistration  implements Event{
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(message);
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 		
-		type = din.readInt();
+		messageType = din.readInt();
 		
 		int identifierLength = din.readInt();
-		byte[] identifierBytes = new byte[identifierLength];
-		din.readFully(identifierBytes);
+		byte[] inetBytes = new byte[identifierLength];
+		din.readFully(inetBytes);
 		
-		inetAddress = identifierBytes;
+		inetAddress = inetBytes;
 		
 		port = din.readInt();
 		
@@ -77,7 +77,7 @@ public class OverlayNodeSendsRegistration  implements Event{
 				int: Port number
 			 */
 			
-			dout.writeInt(type);
+			dout.writeInt(messageType);
 			
 			byte[] inetAddrBytes = inetAddress;
 			int elementLength = inetAddrBytes.length;
@@ -106,7 +106,7 @@ public class OverlayNodeSendsRegistration  implements Event{
 	@Override
 	public int getType() {
 
-		return type;
+		return messageType;
 	}
 	
 	public InetAddress getInetAddress() throws UnknownHostException {
