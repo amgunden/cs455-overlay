@@ -18,34 +18,23 @@ import cs455.overlay.wireformats.RegistryReportsRegistrationStatus;
 public class MessagingNode implements Node{
 	
 	int nodeID;
+	String registry;
 	
-	public MessagingNode() throws IOException {
+	public MessagingNode(String regHostname, int port) throws IOException {
 
 		// 0 to use a port number that is automatically allocated.
 		Thread serverThread = new Thread(new TCPServerThread(0));
 		serverThread.start();
 		
-		// Initiate registration to Registry -- null refers to localhost
-		Socket regSocket = TCPConnectionsCache.getInstance().createTCPConnection(null, 55555);
-		//if regSocket is null there is an Error
+		registry = regHostname;
 		
-		InetAddress addr = regSocket.getLocalAddress();
-		
-		int port = regSocket.getLocalPort();
-		
-		TCPConnection regConn = TCPConnectionsCache.getInstance().getTCPConByIpAddr(addr);
-		
-		TCPConnectionsCache.getInstance().addClientConnection(-1, regConn);
-
-		OverlayNodeSendsRegistration regMessage = new OverlayNodeSendsRegistration(addr, port);
-		
-		TCPConnectionsCache.getInstance().sendMessage(-1, regMessage.getBytes());
+		register(registry, port);
 
 	}
 	
 	public static void main(String[] args) throws IOException {
 		
-		MessagingNode messageNode = new MessagingNode();
+		MessagingNode messageNode = new MessagingNode(args[0], Integer.parseInt(args[1]));
 		
 		EventFactory.getInstance().setNode(messageNode);
 		
@@ -62,13 +51,40 @@ public class MessagingNode implements Node{
 		System.out.println("onEvent entered");
 		
 		if(event instanceof RegistryReportsRegistrationStatus) {
-			
 			System.out.println("RegistryReportsRegistrationStatus Message Received");
-			System.out.println( ((RegistryReportsRegistrationStatus) event).getInfoMessage());
-			System.out.println(((RegistryReportsRegistrationStatus) event).getRegStatus());
-			
+			handleRegStatus( (RegistryReportsRegistrationStatus) event);
 		} 
 		
+	}
+	
+	public void handleRegStatus(RegistryReportsRegistrationStatus regStatus) {
+		System.out.println( regStatus.getInfoMessage());
+		System.out.println( regStatus.getRegStatus());
+		
+		if(regStatus.getRegStatus() == -1) {
+			// Registration Error
+			// TODO Error Handling
+			System.out.println(regStatus.getInfoMessage());
+		}
+		else {
+			nodeID = regStatus.getRegStatus();
+		}
+		
+		
+	}
+	
+	public void register(String registryName, int port) {
+		// Initiate registration to Registry -- null refers to localhost
+		Socket regSocket = TCPConnectionsCache.getInstance().createTCPConnection(registryName, port);
+		//if regSocket is null there is an Error
+
+		// Add Registry node to the clientConnections Hashmap
+		TCPConnection regConn = TCPConnectionsCache.getInstance().getTCPConByIpAddr( regSocket.getInetAddress());
+		TCPConnectionsCache.getInstance().addClientConnection(-1, regConn);
+
+		//Build msg with local details to send to Registry
+		OverlayNodeSendsRegistration regMessage = new OverlayNodeSendsRegistration(regSocket.getLocalAddress(), regSocket.getLocalPort());
+		TCPConnectionsCache.getInstance().sendMessage(-1, regMessage.getBytes());
 	}
 	
 

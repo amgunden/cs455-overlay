@@ -51,7 +51,7 @@ public class EventFactory {
 			//return new RegistryReportsDeregistrationStatus();
 		}
 		else if(type == 6) {
-			node.onEvent( new RegistrySendsNodeManifest() );
+			node.onEvent( new RegistrySendsNodeManifest(incomingMessage) );
 			//return new RegistrySendsNodeManifest();
 		}
 		else if(type == 7) {

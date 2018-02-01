@@ -21,8 +21,8 @@ public class TCPServerThread implements Runnable{
 	
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
-		System.out.println("\r\nRunning Server: " + "Host=" + serverSocket.getInetAddress().getHostAddress() +" Port=" + serverSocket.getLocalPort());
+		
+		System.out.println("\r\nRunning ServerSocket Thread: " + "Host=" + serverSocket.getInetAddress().getHostAddress() +" Port=" + serverSocket.getLocalPort());
 		
 		try {
 			while (true) {

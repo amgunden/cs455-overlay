@@ -69,7 +69,14 @@ public class TCPConnection {
 		tcpSender = new TCPSender(this.socket);
 	}
 	
-	
+	// Junit constructor
+	public TCPConnection(InetAddress inetAddr, int port) throws IOException {
+		// TODO Auto-generated constructor stub
+		
+		this.inetAddress = inetAddr;
+		this.port = port;
+
+	}
 	
 	public void sendTCPMessage(byte[] dataToSend) throws IOException {
 		

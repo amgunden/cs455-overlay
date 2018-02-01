@@ -4,15 +4,20 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Random;
 
+import cs455.overlay.routing.RoutingEntry;
+import cs455.overlay.routing.RoutingTable;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPConnectionsCache;
 import cs455.overlay.transport.TCPServerThread;
+import cs455.overlay.util.InteractiveCommandParser;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.EventFactory;
 import cs455.overlay.wireformats.OverlayNodeSendsRegistration;
 import cs455.overlay.wireformats.RegistryReportsRegistrationStatus;
+import cs455.overlay.wireformats.RegistrySendsNodeManifest;
 
 public class Registry implements Node{
 	
@@ -21,6 +26,13 @@ public class Registry implements Node{
 		// TODO Auto-generated constructor stub
 		Thread serverThread = new Thread(new TCPServerThread(port));
 		serverThread.start();
+		
+		Thread cmdParser = new Thread(new InteractiveCommandParser(this));
+		cmdParser.start();
+	}
+	
+	public Registry() {
+		
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -45,7 +57,7 @@ public class Registry implements Node{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} 
+		}
 		
 	}
 	
@@ -92,7 +104,9 @@ public class Registry implements Node{
 			// TODO check
 			TCPConnectionsCache.getInstance().addClientConnection(newNodeID, tcpConnection);
 			
-			RegistryReportsRegistrationStatus regMsg = new RegistryReportsRegistrationStatus(newNodeID, "Registration request successful. The number of messaging nodes currently constituting the overlay is X");
+			int clientCount = TCPConnectionsCache.getInstance().getClientCount();
+			
+			RegistryReportsRegistrationStatus regMsg = new RegistryReportsRegistrationStatus(newNodeID, "Registration request successful. The number of messaging nodes currently constituting the overlay is " + clientCount);
 			
 			tcpConnection.sendTCPMessage(regMsg.getBytes());
 			System.out.println("RegistryReportsRegistrationStatus Message Sent");
@@ -116,7 +130,7 @@ public class Registry implements Node{
 		
 		// Test if random int is a Key in the HashMap
 		// if it is then a new number is generated and the while loop runs again
-		while( TCPConnectionsCache.getInstance().getClientConnections().containsKey(id)) {
+		while( TCPConnectionsCache.getInstance().getIndexOfClientId(id) != -1) {
 			id = random.nextInt(128);
 		}
 		
@@ -125,8 +139,84 @@ public class Registry implements Node{
 		
 	}
 	
-
+	public void handleOverlaySetup(int numOfEntries) {
+		
+		// TODO Error if number of nodes < 2 * Nr (number of entries)
+		
+		int numOfMsgNodes = TCPConnectionsCache.getInstance().getClientCount();
+		
+		if( numOfMsgNodes < (2 * numOfEntries)) {
+			System.out.println("There is not enough nodes to use a routing table of this size. Please use a smaller routing table.");
+		}
+		else {
+			
+			// Cycle through nodes
+			
+			for(int i=0; i < numOfMsgNodes; i++) {
+				
+				// Call method to create node's specific routing table message
+				
+				RoutingTable tableForNode = createRoutingTable(i, numOfEntries, numOfMsgNodes);
+				
+				ArrayList<Integer> idList = TCPConnectionsCache.getInstance().getIdList(i);
+				
+				// Create Message
+				RegistrySendsNodeManifest manifestMsg = new RegistrySendsNodeManifest(numOfEntries, tableForNode, idList);
+				
+				byte[] msgBytes = manifestMsg.getBytes();
+				
+				// Send message
+				TCPConnection recevingNode = TCPConnectionsCache.getInstance().getClientConnections().get(i);
+				
+				try {
+					recevingNode.sendTCPMessage(msgBytes);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				
+			}
+			
+			
+		}
+		
+	}
 	
+	public RoutingTable createRoutingTable(int currentNodeIndex, int numInRoutingTable, int nodeCount) {
+		
+		
+		// Nr = number in routing table
+		// node distances, powers of 2; 2^0, 2^1, ..., 2^(Nr-1)
+		// Wrap-around needed ---  (index + distance) mod (number of nodes)
+			
+		RoutingTable routingTable = new RoutingTable();
+		
+		for(int i=0; i<numInRoutingTable; i++) {
+			//System.out.println("Count: "+ count);
+			
+			// TODO check casting and ints relationship with pow
+			//System.out.println("i = " + i);
+			int nextOffset = (int) Math.pow(2, i);
+			//System.out.println("nextOffSet: " + nextOffset + " currentNodeIndex: " + currentNodeIndex);
+			int count = TCPConnectionsCache.getInstance().getClientCount();
+			//System.out.println("Count: "+ nodeCount);
+			//System.out.println("NodeCount from instance: " + count);
+			int nextClient = (currentNodeIndex + nextOffset) % nodeCount;
+			//System.out.println("nextClient index: "+ nextClient);
+			//System.out.println();
+			
+			TCPConnection next = TCPConnectionsCache.getInstance().getClientConnections().get(nextClient);
+			
+			RoutingEntry entry = new RoutingEntry(next.getNodeID(), next.getInetAddress(), next.getPort());
+			
+			routingTable.addEntry(entry);
+			
+		}
+		
+		return routingTable;
+		
+	}
 	
 
 }
