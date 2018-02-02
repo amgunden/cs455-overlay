@@ -199,7 +199,7 @@ public class Registry implements Node{
 			//System.out.println("i = " + i);
 			int nextOffset = (int) Math.pow(2, i);
 			//System.out.println("nextOffSet: " + nextOffset + " currentNodeIndex: " + currentNodeIndex);
-			int count = TCPConnectionsCache.getInstance().getClientCount();
+			//int count = TCPConnectionsCache.getInstance().getClientCount();
 			//System.out.println("Count: "+ nodeCount);
 			//System.out.println("NodeCount from instance: " + count);
 			int nextClient = (currentNodeIndex + nextOffset) % nodeCount;
