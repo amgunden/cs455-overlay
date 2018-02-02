@@ -2,7 +2,7 @@ package cs455.overlay.wireformats;
 
 public interface Event {
 
-	// getType();
+	int getType();
 	
-	// getBytes();
+	 byte[] getBytes();
 }
