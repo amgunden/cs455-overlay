@@ -40,7 +40,7 @@ public class InteractiveCommandParser implements Runnable{
 		}
 		else if( splitCmd[0].equals(new String("setup-overlay"))) {
 			// TODO add error checking for command with no number ---> default 3
-			if(splitCmd[1].equals(null)) {
+			if(splitCmd.length == 1) {
 				setupOverlay(3);
 			}
 			else {
