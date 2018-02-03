@@ -15,6 +15,7 @@ import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.InteractiveCommandParser;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.EventFactory;
+import cs455.overlay.wireformats.NodeReportsOverlaySetupStatus;
 import cs455.overlay.wireformats.OverlayNodeSendsRegistration;
 import cs455.overlay.wireformats.RegistryReportsRegistrationStatus;
 import cs455.overlay.wireformats.RegistrySendsNodeManifest;
@@ -52,16 +53,21 @@ public class Registry implements Node{
 		
 		if(event instanceof OverlayNodeSendsRegistration) {
 			try {
-				registerNode(event);
+				registerNode( (OverlayNodeSendsRegistration) event);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+		else if( event instanceof NodeReportsOverlaySetupStatus) {
+			
+			handleOverlaySetupStatus( (NodeReportsOverlaySetupStatus) event);
+			
+		}
 		
 	}
 	
-	public void registerNode(Event nodeRegistration) throws IOException {
+	public void registerNode(OverlayNodeSendsRegistration nodeRegistration) throws IOException {
 		
 		// Checks to see if the node had previously registered and
 		// ensures that the IP address in the message matches the address where the request originated.
@@ -74,15 +80,15 @@ public class Registry implements Node{
 		*/
 		
 		System.out.println("OverlayNodeSendsRegistration Message Received");
-		System.out.println(((OverlayNodeSendsRegistration) nodeRegistration).getPort());
+		System.out.println( nodeRegistration.getPort());
 		
 		try {
-			System.out.println(((OverlayNodeSendsRegistration) nodeRegistration).getInetAddress().toString());
+			System.out.println( nodeRegistration.getInetAddress().toString());
 			
-			TCPConnection tcpConnection = TCPConnectionsCache.getInstance().getTCPConByIpAddr(((OverlayNodeSendsRegistration) nodeRegistration).getInetAddress());
+			TCPConnection tcpConnection = TCPConnectionsCache.getInstance().getTCPConByIpAddr( nodeRegistration.getInetAddress());
 			
 			InetAddress socketAddr = tcpConnection.getInetAddress();
-			InetAddress givenAddr = ((OverlayNodeSendsRegistration) nodeRegistration).getInetAddress();
+			InetAddress givenAddr = nodeRegistration.getInetAddress();
 			
 			// TODO change to .equals ?
 			if( socketAddr != givenAddr) {
@@ -215,6 +221,12 @@ public class Registry implements Node{
 		}
 		
 		return routingTable;
+		
+	}
+	
+	public void handleOverlaySetupStatus(NodeReportsOverlaySetupStatus setupStatus) {
+		
+		// Handle overlay setup failure
 		
 	}
 	

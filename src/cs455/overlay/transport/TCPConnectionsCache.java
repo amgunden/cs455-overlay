@@ -100,6 +100,23 @@ public class TCPConnectionsCache {
 		
 	}
 	
+	public Socket createTCPConnection(InetAddress addr, int port) {
+		
+		Socket newConnection = null;
+		
+		try {
+			newConnection = new Socket(addr, port);
+			addTCPConnection(addr, newConnection, port);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		return newConnection;
+	}
+	
 	public void addTCPConnection(InetAddress inetAddr, Socket client, int port) throws IOException {
 		
 		TCPConnection newTCP = new TCPConnection(inetAddr, client, port);
