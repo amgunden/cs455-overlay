@@ -6,7 +6,7 @@ public class RoutingEntry {
 	
 	private int nodeId;
 	private InetAddress addr;
-	private int port;
+	private int serverSocketPort;
 	
 	
 	public void setNodeId(int nodeId) {
@@ -18,7 +18,7 @@ public class RoutingEntry {
 	}
 
 	public void setPort(int port) {
-		this.port = port;
+		this.serverSocketPort = port;
 	}
 
 	public int getNodeId() {
@@ -30,7 +30,7 @@ public class RoutingEntry {
 	}
 
 	public int getPort() {
-		return port;
+		return serverSocketPort;
 	}
 
 	public RoutingEntry(int id, InetAddress address, int port) {
@@ -38,7 +38,7 @@ public class RoutingEntry {
 		
 		nodeId = id;
 		addr=address;
-		this.port = port;
+		this.serverSocketPort = port;
 		
 	}
 	

@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -68,10 +69,19 @@ public class TCPConnectionsCache {
 		
 		TCPConnection tcpConnection = null;
 		
-		for( TCPConnection con : existingTCPConnections) {
-			if( con.inetAddress.equals(inetAddress)) {
-				tcpConnection = con;
+//		for( TCPConnection con : existingTCPConnections) {
+//			if( con.getInetAddress().equals(inetAddress)) {
+//				tcpConnection = con;
+//			}
+//		}
+		
+		Iterator<TCPConnection> iterator = existingTCPConnections.iterator();
+		while( iterator.hasNext() ) {
+			TCPConnection temp = iterator.next();
+			if( temp.getInetAddress().equals(inetAddress) ) {
+				tcpConnection = temp;
 			}
+			
 		}
 		
 		return tcpConnection;
@@ -85,7 +95,7 @@ public class TCPConnectionsCache {
 		try {
 			
 			newConnection = new Socket(host, port);
-			addTCPConnection(newConnection.getInetAddress(), newConnection, port);
+			addTCPConnection(newConnection);
 			
 			
 		} catch (UnknownHostException e) {
@@ -105,8 +115,10 @@ public class TCPConnectionsCache {
 		Socket newConnection = null;
 		
 		try {
+			System.out.println(addr.getHostAddress());
+			System.out.println(port);
 			newConnection = new Socket(addr, port);
-			addTCPConnection(addr, newConnection, port);
+			addTCPConnection(newConnection);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -117,9 +129,9 @@ public class TCPConnectionsCache {
 		return newConnection;
 	}
 	
-	public void addTCPConnection(InetAddress inetAddr, Socket client, int port) throws IOException {
+	public void addTCPConnection(Socket clientSocket) throws IOException {
 		
-		TCPConnection newTCP = new TCPConnection(inetAddr, client, port);
+		TCPConnection newTCP = new TCPConnection(clientSocket);
 		existingTCPConnections.add(newTCP);
 	}
 	

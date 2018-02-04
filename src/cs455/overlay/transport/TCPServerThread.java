@@ -19,6 +19,10 @@ public class TCPServerThread implements Runnable{
 		
 	}
 	
+	public int getServerSocketPort() {
+		return serverSocket.getLocalPort();
+	}
+	
 	@Override
 	public void run() {
 		
@@ -28,13 +32,13 @@ public class TCPServerThread implements Runnable{
 			while (true) {
 
 				Socket clientSocket = serverSocket.accept();
-				int port = clientSocket.getPort();
-				InetAddress inetAddr = clientSocket.getInetAddress();
+				//int port = clientSocket.getPort();
+				//InetAddress inetAddr = clientSocket.getInetAddress();
 				
 				String clientAddress = clientSocket.getInetAddress().getHostAddress();
 		        System.out.println("\r\nNew connection from " + clientAddress);
 		        
-		        TCPConnectionsCache.getInstance().addTCPConnection(inetAddr, clientSocket, port);
+		        TCPConnectionsCache.getInstance().addTCPConnection(clientSocket);
 		        
 
 				

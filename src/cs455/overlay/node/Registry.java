@@ -80,12 +80,23 @@ public class Registry implements Node{
 		*/
 		
 		System.out.println("OverlayNodeSendsRegistration Message Received");
-		System.out.println( nodeRegistration.getPort());
+		System.out.println("Nodes Server Socket is listening on: " + nodeRegistration.getServerSocketPort());
 		
 		try {
 			System.out.println( nodeRegistration.getInetAddress().toString());
 			
 			TCPConnection tcpConnection = TCPConnectionsCache.getInstance().getTCPConByIpAddr( nodeRegistration.getInetAddress());
+			
+			tcpConnection.setServerSocketPort(nodeRegistration.getServerSocketPort());
+			/*
+			 Exception in thread "Thread-2" java.lang.NullPointerException
+				at cs455.overlay.node.Registry.registerNode(Registry.java:90)  -- Now 100
+				at cs455.overlay.node.Registry.onEvent(Registry.java:56)
+				at cs455.overlay.wireformats.EventFactory.getEvent(EventFactory.java:38)
+				at cs455.overlay.transport.TCPConnection.handleReceivedMessage(TCPConnection.java:89)
+				at cs455.overlay.transport.TCPConnection$TCPReceiverThread.run(TCPConnection.java:115)
+				at java.lang.Thread.run(Thread.java:748) 
+			 */
 			
 			InetAddress socketAddr = tcpConnection.getInetAddress();
 			InetAddress givenAddr = nodeRegistration.getInetAddress();
@@ -214,7 +225,7 @@ public class Registry implements Node{
 			
 			TCPConnection next = TCPConnectionsCache.getInstance().getClientConnections().get(nextClient);
 			
-			RoutingEntry entry = new RoutingEntry(next.getNodeID(), next.getInetAddress(), next.getPort());
+			RoutingEntry entry = new RoutingEntry(next.getNodeID(), next.getInetAddress(), next.getServerSocketPort());
 			
 			routingTable.addEntry(entry);
 			
@@ -225,6 +236,13 @@ public class Registry implements Node{
 	}
 	
 	public void handleOverlaySetupStatus(NodeReportsOverlaySetupStatus setupStatus) {
+		
+		if( setupStatus.getSuccessStatus() != -1) {
+			System.out.println("Node "+setupStatus.getSuccessStatus()+" has successfully setup connections to the nodes in it's routing table");
+		}
+		else {
+			System.out.println("A node has failed to connect to the nodes listed in it's routing table");
+		}
 		
 		// Handle overlay setup failure
 		

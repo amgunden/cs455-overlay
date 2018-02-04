@@ -18,6 +18,7 @@ import cs455.overlay.wireformats.RegistrySendsNodeManifest;
 public class MessagingNode implements Node{
 	
 	int nodeID;
+	int serverSocketPort;
 	String registryHostname;
 	RoutingTable routingTable;
 	ArrayList<Integer> nodeIdList;
@@ -25,7 +26,12 @@ public class MessagingNode implements Node{
 	public MessagingNode(String regHostname, int port) throws IOException {
 
 		// 0 to use a port number that is automatically allocated.
-		Thread serverThread = new Thread(new TCPServerThread(0));
+		TCPServerThread tcpServer = new TCPServerThread(0);
+		
+		// Get port that the ServerSocket of this node is listening on
+		serverSocketPort = tcpServer.getServerSocketPort();
+		
+		Thread serverThread = new Thread(tcpServer);
 		serverThread.start();
 		
 		registryHostname = regHostname;
@@ -155,8 +161,8 @@ public class MessagingNode implements Node{
 		TCPConnection regConn = TCPConnectionsCache.getInstance().getTCPConByIpAddr( regSocket.getInetAddress());
 		TCPConnectionsCache.getInstance().addClientConnection(-1, regConn);
 
-		//Build msg with local details to send to Registry
-		OverlayNodeSendsRegistration regMessage = new OverlayNodeSendsRegistration(regSocket.getLocalAddress(), regSocket.getLocalPort());
+		//Build msg with local details to send to Registry, address of this node and port that server socket is listening on
+		OverlayNodeSendsRegistration regMessage = new OverlayNodeSendsRegistration(regSocket.getLocalAddress(), serverSocketPort);
 		TCPConnectionsCache.getInstance().sendMessage(-1, regMessage.getBytes());
 	}
 	
