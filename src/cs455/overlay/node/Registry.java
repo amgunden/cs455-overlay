@@ -290,5 +290,22 @@ public class Registry implements Node{
 		
 	}
 	
+	public void printMessagingNodes() {
+		
+		int numOfMsgNodes = TCPConnectionsCache.getInstance().getClientCount();
+		
+		System.out.println("Messaging Node List:");
+		
+		for(int i=0; i < numOfMsgNodes; i++) {
+			
+			TCPConnection tempCon = TCPConnectionsCache.getInstance().getClientConnections().get(i);
+			
+			System.out.println("Node "+(i+1)+": Hostname: "+tempCon.getInetAddress().getHostName()+"   Port: "+tempCon.getPort()+"   Node ID: "+tempCon.getNodeID());
+			
+		}
+		
+		
+	}
+	
 
 }
