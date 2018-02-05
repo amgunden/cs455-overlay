@@ -36,7 +36,7 @@ public class InteractiveCommandParser implements Runnable{
 		String[] splitCmd = cmd.split(" "); 
 		
 		if(splitCmd[0].equals(new String("list-messaging-nodes"))) {
-			listMsgNodes();
+			( (Registry) node).printMessagingNodes();
 		}
 		else if( splitCmd[0].equals(new String("setup-overlay"))) {
 			// TODO add error checking for command with no number ---> default 3
