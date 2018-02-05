@@ -13,15 +13,27 @@ import cs455.overlay.wireformats.EventFactory;
 
 public class TCPConnection {
 	
+	// Variables for Junit use only
+	InetAddress inetAddress;
+	int port;
+	
 	//Node node;
 	
 	int nodeID;
-	InetAddress inetAddress;
-	int port;
+	int serverSocketPort;
+	
 	Socket socket;
 	
 	//TCPReceiverThread tcpReceiver;
 	TCPSender tcpSender;
+	
+	public int getServerSocketPort() {
+		return serverSocketPort;
+	}
+
+	public void setServerSocketPort(int serverSocketPort) {
+		this.serverSocketPort = serverSocketPort;
+	}
 	
 	public int getNodeID() {
 		return nodeID;
@@ -32,30 +44,30 @@ public class TCPConnection {
 	}
 
 	public InetAddress getInetAddress() {
-		return inetAddress;
-	}
-
-	public void setInetAddress(InetAddress inetAddress) {
-		this.inetAddress = inetAddress;
+		return socket.getInetAddress();
 	}
 
 	public int getPort() {
-		return port;
-	}
-
-	public void setPort(int port) {
-		this.port = port;
+		return socket.getPort();
 	}
 
 	public Socket getSocket() {
 		return socket;
 	}
-
-	public void setSocket(Socket socket) {
+	
+	public TCPConnection(Socket socket) throws IOException {
+		
 		this.socket = socket;
+		
+		Thread tcpReceiverThread = new Thread( new TCPReceiverThread(this.socket));
+		tcpReceiverThread.start();
+		
+		tcpSender = new TCPSender(this.socket);
+		
 	}
+	
 
-
+	/*
 	public TCPConnection(InetAddress inetAddr, Socket socket, int port) throws IOException {
 		// TODO Auto-generated constructor stub
 		
@@ -68,7 +80,16 @@ public class TCPConnection {
 		
 		tcpSender = new TCPSender(this.socket);
 	}
+	*/
 	
+	// Junit constructor
+	public TCPConnection(InetAddress inetAddr, int port) throws IOException {
+		// TODO Auto-generated constructor stub
+		
+		this.inetAddress = inetAddr;
+		this.port = port;
+
+	}
 	
 	
 	public void sendTCPMessage(byte[] dataToSend) throws IOException {

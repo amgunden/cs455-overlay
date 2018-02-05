@@ -51,15 +51,15 @@ public class EventFactory {
 			//return new RegistryReportsDeregistrationStatus();
 		}
 		else if(type == 6) {
-			node.onEvent( new RegistrySendsNodeManifest() );
+			node.onEvent( new RegistrySendsNodeManifest(incomingMessage) );
 			//return new RegistrySendsNodeManifest();
 		}
 		else if(type == 7) {
-			node.onEvent( new NodeReportsOverlaySetupStatus() );
+			node.onEvent( new NodeReportsOverlaySetupStatus(incomingMessage) );
 			//return new NodeReportsOverlaySetupStatus();
 		}
 		else if(type == 8) {
-			node.onEvent( new RegistryRequestsTaskInitiate() );
+			node.onEvent( new RegistryRequestsTaskInitiate(incomingMessage) );
 			//return new RegistryRequestsTaskInitiate();
 		}
 		else if(type == 9) {

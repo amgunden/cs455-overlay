@@ -14,7 +14,7 @@ public class OverlayNodeSendsRegistration  implements Event{
 	
 	private int messageType;
 	private byte[] inetAddress;
-	private int port;
+	private int serverSocketPort;
 	
 
 //	private long timestamp;
@@ -28,7 +28,7 @@ public class OverlayNodeSendsRegistration  implements Event{
 		messageType = Protocol.OVERLAY_NODE_SENDS_REGISTRATION;
 		
 		inetAddress = inetAddr.getAddress();
-		this.port = port;
+		this.serverSocketPort = port;
 		
 	}
 	
@@ -53,7 +53,7 @@ public class OverlayNodeSendsRegistration  implements Event{
 		
 		inetAddress = inetBytes;
 		
-		port = din.readInt();
+		serverSocketPort = din.readInt();
 		
 		baInputStream.close();
 		din.close();
@@ -85,7 +85,7 @@ public class OverlayNodeSendsRegistration  implements Event{
 			dout.writeInt(elementLength);
 			dout.write(inetAddrBytes);
 			
-			dout.writeInt(port);
+			dout.writeInt(serverSocketPort);
 			
 			dout.flush();
 			marshalledBytes = baOutputStream.toByteArray();
@@ -115,8 +115,8 @@ public class OverlayNodeSendsRegistration  implements Event{
 		return temp;
 	}
 	
-	public int getPort() {
-		return port;
+	public int getServerSocketPort() {
+		return serverSocketPort;
 	}
 
 }

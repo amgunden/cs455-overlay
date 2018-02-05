@@ -11,32 +11,36 @@ import java.util.Random;
 public class TCPServerThread implements Runnable{
 	
 	private ServerSocket serverSocket;
+	private TCPConnectionsCache tcpConCache;
 
 	public TCPServerThread(int portNum) throws IOException {
 		// TODO Auto-generated constructor stub
 
 		serverSocket = new ServerSocket(portNum);
+		tcpConCache = TCPConnectionsCache.getInstance();
 		
+	}
+	
+	public int getServerSocketPort() {
+		return serverSocket.getLocalPort();
 	}
 	
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
-		System.out.println("\r\nRunning Server: " + "Host=" + serverSocket.getInetAddress().getHostAddress() +" Port=" + serverSocket.getLocalPort());
+		
+		System.out.println("\r\nRunning ServerSocket Thread: " + "Host=" + serverSocket.getInetAddress().getHostAddress() +" Port=" + serverSocket.getLocalPort());
 		
 		try {
 			while (true) {
 
 				Socket clientSocket = serverSocket.accept();
-				int port = clientSocket.getPort();
-				InetAddress inetAddr = clientSocket.getInetAddress();
+				//int port = clientSocket.getPort();
+				//InetAddress inetAddr = clientSocket.getInetAddress();
 				
-				String clientAddress = clientSocket.getInetAddress().getHostAddress();
+		        tcpConCache.addTCPConnection(clientSocket);
+		        
+		        String clientAddress = clientSocket.getInetAddress().getHostAddress();
 		        System.out.println("\r\nNew connection from " + clientAddress);
-		        
-		        TCPConnectionsCache.getInstance().addTCPConnection(inetAddr, clientSocket, port);
-		        
-
 				
 		        /*
 		         * 
