@@ -161,11 +161,18 @@ public class MessagingNode implements Node{
 		TCPConnection regConn = TCPConnectionsCache.getInstance().getTCPConByIpAddr( regSocket.getInetAddress());
 		TCPConnectionsCache.getInstance().addClientConnection(-1, regConn);
 
+		sendRegistrationMsg(regSocket);
+	}
+	
+	
+	public void sendRegistrationMsg( Socket regSocket) {
+		
 		//Build msg with local details to send to Registry, address of this node and port that server socket is listening on
 		OverlayNodeSendsRegistration regMessage = new OverlayNodeSendsRegistration(regSocket.getLocalAddress(), serverSocketPort);
 		TCPConnectionsCache.getInstance().sendMessage(-1, regMessage.getBytes());
+		
+		
 	}
-	
 
 
 }

@@ -22,6 +22,8 @@ import cs455.overlay.wireformats.RegistrySendsNodeManifest;
 
 public class Registry implements Node{
 	
+	private int numOfEntriesInRouting;
+	
 
 	public Registry(int port) throws IOException {
 		// TODO Auto-generated constructor stub
@@ -87,10 +89,14 @@ public class Registry implements Node{
 			
 			TCPConnection tcpConnection = TCPConnectionsCache.getInstance().getTCPConByIpAddr( nodeRegistration.getInetAddress());
 			
+			if( tcpConnection == null) {
+				System.out.println("Returned TCPConnection is null");
+			}
+			
 			tcpConnection.setServerSocketPort(nodeRegistration.getServerSocketPort());
 			/*
 			 Exception in thread "Thread-2" java.lang.NullPointerException
-				at cs455.overlay.node.Registry.registerNode(Registry.java:90)  -- Now 100
+				at cs455.overlay.node.Registry.registerNode(Registry.java:90)
 				at cs455.overlay.node.Registry.onEvent(Registry.java:56)
 				at cs455.overlay.wireformats.EventFactory.getEvent(EventFactory.java:38)
 				at cs455.overlay.transport.TCPConnection.handleReceivedMessage(TCPConnection.java:89)
@@ -160,6 +166,8 @@ public class Registry implements Node{
 		
 		// TODO Error if number of nodes < 2 * Nr (number of entries)
 		
+		numOfEntriesInRouting = numOfEntries;
+		
 		int numOfMsgNodes = TCPConnectionsCache.getInstance().getClientCount();
 		
 		if( numOfMsgNodes < (2 * numOfEntries)) {
@@ -177,25 +185,31 @@ public class Registry implements Node{
 				
 				ArrayList<Integer> idList = TCPConnectionsCache.getInstance().getIdList(i);
 				
-				// Create Message
-				RegistrySendsNodeManifest manifestMsg = new RegistrySendsNodeManifest(numOfEntries, tableForNode, idList);
-				
-				byte[] msgBytes = manifestMsg.getBytes();
-				
-				// Send message
-				TCPConnection recevingNode = TCPConnectionsCache.getInstance().getClientConnections().get(i);
-				
-				try {
-					recevingNode.sendTCPMessage(msgBytes);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				sendRoutingTable(i, numOfEntries, tableForNode, idList);
 				
 				
 			}
 			
 			
+		}
+		
+	}
+	
+	public void sendRoutingTable(int index, int numOfEntries, RoutingTable tableForNode, ArrayList<Integer> idList) {
+		
+		// Create Message
+		RegistrySendsNodeManifest manifestMsg = new RegistrySendsNodeManifest(numOfEntries, tableForNode, idList);
+		
+		byte[] msgBytes = manifestMsg.getBytes();
+		
+		// Send message
+		TCPConnection recevingNode = TCPConnectionsCache.getInstance().getClientConnections().get(index);
+		
+		try {
+			recevingNode.sendTCPMessage(msgBytes);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 	}
@@ -245,6 +259,34 @@ public class Registry implements Node{
 		}
 		
 		// Handle overlay setup failure
+		
+	}
+	
+	public void printRoutingTables() {
+		
+		int numOfMsgNodes = TCPConnectionsCache.getInstance().getClientCount();
+		
+		for(int i=0; i < numOfMsgNodes; i++) {
+			
+			// Call method to create node's specific routing table message
+			
+			System.out.println();
+			System.out.println("Routing Table for Node: " + TCPConnectionsCache.getInstance().getClientConnections().get(i).getNodeID());
+			
+			RoutingTable tableForNode = createRoutingTable(i, numOfEntriesInRouting, numOfMsgNodes);
+			ArrayList<RoutingEntry> routingEntries = tableForNode.getRoutingEntries();
+			
+			for(int j=0; j<routingEntries.size(); j++) {
+				
+				System.out.println("Routing Entry #" + (j+1) +": IP Address: "+ routingEntries.get(j).getInetAddr().getHostAddress()+ "   Port Number: " + routingEntries.get(j).getPort()+"   Node ID: "+ routingEntries.get(j).getNodeId()	);
+				
+			}
+			
+			System.out.println();
+			System.out.println();
+			
+			
+		}
 		
 	}
 	

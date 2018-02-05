@@ -11,11 +11,13 @@ import java.util.Random;
 public class TCPServerThread implements Runnable{
 	
 	private ServerSocket serverSocket;
+	private TCPConnectionsCache tcpConCache;
 
 	public TCPServerThread(int portNum) throws IOException {
 		// TODO Auto-generated constructor stub
 
 		serverSocket = new ServerSocket(portNum);
+		tcpConCache = TCPConnectionsCache.getInstance();
 		
 	}
 	
@@ -35,12 +37,10 @@ public class TCPServerThread implements Runnable{
 				//int port = clientSocket.getPort();
 				//InetAddress inetAddr = clientSocket.getInetAddress();
 				
-				String clientAddress = clientSocket.getInetAddress().getHostAddress();
+		        tcpConCache.addTCPConnection(clientSocket);
+		        
+		        String clientAddress = clientSocket.getInetAddress().getHostAddress();
 		        System.out.println("\r\nNew connection from " + clientAddress);
-		        
-		        TCPConnectionsCache.getInstance().addTCPConnection(clientSocket);
-		        
-
 				
 		        /*
 		         * 

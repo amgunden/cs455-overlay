@@ -48,7 +48,8 @@ public class InteractiveCommandParser implements Runnable{
 			}
 		}
 		else if( splitCmd[0].equals( new String("list-routing-tables"))) {
-			listRoutingTables();
+			( (Registry) node).printRoutingTables();
+
 		}
 		else if( splitCmd[0].equals(new String("start"))) {
 			// TODO add error checking for command with no number
@@ -84,9 +85,9 @@ public class InteractiveCommandParser implements Runnable{
 		((Registry) node).handleOverlaySetup(numEntries);
 	}
 	
-	public void listRoutingTables() {
-		System.out.println("List Routing Table Command Received");
-	}
+//	public void listRoutingTables() {
+//		System.out.println("List Routing Table Command Received");
+//	}
 	
 	public void start(int numOfMsgs) {
 		System.out.println("Start Command Received. Number of messages: "+ numOfMsgs);

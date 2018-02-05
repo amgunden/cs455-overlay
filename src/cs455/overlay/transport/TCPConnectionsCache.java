@@ -75,6 +75,7 @@ public class TCPConnectionsCache {
 //			}
 //		}
 		
+		
 		Iterator<TCPConnection> iterator = existingTCPConnections.iterator();
 		while( iterator.hasNext() ) {
 			TCPConnection temp = iterator.next();
@@ -148,6 +149,15 @@ public class TCPConnectionsCache {
 			}
 			
 		}
+		
+//		Iterator<TCPConnection> iterator = clientConns.iterator();
+//		while( iterator.hasNext() ) {
+//			TCPConnection temp = iterator.next();
+//			if(temp.getInetAddress().equals(inetAddress)) {
+//				tcpConnection = temp;
+//			}
+//			
+//		}
 		
 		return tcpConnection;
 		
