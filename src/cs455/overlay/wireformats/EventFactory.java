@@ -63,11 +63,11 @@ public class EventFactory {
 			//return new RegistryRequestsTaskInitiate();
 		}
 		else if(type == 9) {
-			node.onEvent( new OverlayNodeSendsData() );
+			node.onEvent( new OverlayNodeSendsData(incomingMessage) );
 			//return new OverlayNodeSendsData();
 		}
 		else if(type == 10) {
-			node.onEvent( new OverlayNodeReportsTaskFinished() );
+			node.onEvent( new OverlayNodeReportsTaskFinished(incomingMessage) );
 			//return new OverlayNodeReportsTaskFinished();
 		}
 		else if(type == 11) {
@@ -75,7 +75,7 @@ public class EventFactory {
 			//return new RegistryRequestsTrafficSummary();
 		}
 		else if(type == 12) {
-			node.onEvent( new OverlayNodeReportsTrafficSummary() );
+			node.onEvent( new OverlayNodeReportsTrafficSummary(incomingMessage) );
 			//return new OverlayNodeReportsTrafficSummary();
 		}
 

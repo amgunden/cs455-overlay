@@ -1,5 +1,6 @@
 package cs455.overlay.util;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 import cs455.overlay.node.Node;
@@ -36,7 +37,7 @@ public class InteractiveCommandParser implements Runnable{
 		String[] splitCmd = cmd.split(" "); 
 		
 		if(splitCmd[0].equals(new String("list-messaging-nodes"))) {
-			listMsgNodes();
+			( (Registry) node).printMessagingNodes();
 		}
 		else if( splitCmd[0].equals(new String("setup-overlay"))) {
 			// TODO add error checking for command with no number ---> default 3
@@ -53,7 +54,15 @@ public class InteractiveCommandParser implements Runnable{
 		}
 		else if( splitCmd[0].equals(new String("start"))) {
 			// TODO add error checking for command with no number
-			start(Integer.parseInt(splitCmd[1]));
+			try {
+				( (Registry) node).handleStartCmd( Integer.parseInt(splitCmd[1]) );
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		else {
 			System.out.println("Command not recognized. Please re-enter the command");

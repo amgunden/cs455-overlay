@@ -235,5 +235,16 @@ public class TCPConnectionsCache {
 		return idList;
 		
 	}
+	
+	public void sendMsgToAllClients(byte[] msg) throws IOException {
+		
+		Iterator<TCPConnection> iterator = clientConns.iterator();
+		while( iterator.hasNext() ) {
+			TCPConnection temp = iterator.next();
+			temp.sendTCPMessage(msg);
+			
+		}
+		
+	}
 
 }
