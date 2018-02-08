@@ -19,8 +19,8 @@ public class RegistryRequestsTaskInitiate  implements Event{
 		this.numOfPackets = numOfPackets;
 	}
 	
-	public RegistryRequestsTaskInitiate(byte[] msg) {
-		
+	public RegistryRequestsTaskInitiate(byte[] msg) throws IOException {
+		extractMessage(msg);
 	}
 	
 	public int getNumOfPackets() {

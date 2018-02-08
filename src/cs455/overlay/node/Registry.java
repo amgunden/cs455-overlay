@@ -16,17 +16,21 @@ import cs455.overlay.util.InteractiveCommandParser;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.EventFactory;
 import cs455.overlay.wireformats.NodeReportsOverlaySetupStatus;
+import cs455.overlay.wireformats.OverlayNodeReportsTaskFinished;
 import cs455.overlay.wireformats.OverlayNodeSendsRegistration;
 import cs455.overlay.wireformats.RegistryReportsRegistrationStatus;
+import cs455.overlay.wireformats.RegistryRequestsTaskInitiate;
 import cs455.overlay.wireformats.RegistrySendsNodeManifest;
 
 public class Registry implements Node{
 	
 	private int numOfEntriesInRouting;
-	
+	private TCPConnectionsCache tcpConCache;
 
 	public Registry(int port) throws IOException {
-		// TODO Auto-generated constructor stub
+		
+		tcpConCache = TCPConnectionsCache.getInstance();
+
 		Thread serverThread = new Thread(new TCPServerThread(port));
 		serverThread.start();
 		
@@ -66,6 +70,11 @@ public class Registry implements Node{
 			handleOverlaySetupStatus( (NodeReportsOverlaySetupStatus) event);
 			
 		}
+		else if( event instanceof OverlayNodeReportsTaskFinished) {
+			
+			handleTaskReports( (OverlayNodeReportsTaskFinished) event);
+			
+		}
 		
 	}
 	
@@ -87,7 +96,7 @@ public class Registry implements Node{
 		try {
 			System.out.println( nodeRegistration.getInetAddress().toString());
 			
-			TCPConnection tcpConnection = TCPConnectionsCache.getInstance().getTCPConByIpAddr( nodeRegistration.getInetAddress());
+			TCPConnection tcpConnection = tcpConCache.getTCPConByIpAddr( nodeRegistration.getInetAddress());
 			
 			if( tcpConnection == null) {
 				System.out.println("Returned TCPConnection is null");
@@ -114,7 +123,7 @@ public class Registry implements Node{
 			}
 			
 			// Check if node is already in ClientConnections HashMap
-			if(TCPConnectionsCache.getInstance().getClientByIpAddr(givenAddr) != null) {
+			if( tcpConCache.getClientByIpAddr(givenAddr) != null) {
 				// The node had previously registered and has a valid entry in its registry.
 			}
 			
@@ -125,9 +134,9 @@ public class Registry implements Node{
 						
 			// Add socket and connection info to clientConnections
 			// TODO check
-			TCPConnectionsCache.getInstance().addClientConnection(newNodeID, tcpConnection);
+			tcpConCache.addClientConnection(newNodeID, tcpConnection);
 			
-			int clientCount = TCPConnectionsCache.getInstance().getClientCount();
+			int clientCount = tcpConCache.getClientCount();
 			
 			RegistryReportsRegistrationStatus regMsg = new RegistryReportsRegistrationStatus(newNodeID, "Registration request successful. The number of messaging nodes currently constituting the overlay is " + clientCount);
 			
@@ -153,7 +162,7 @@ public class Registry implements Node{
 		
 		// Test if random int is a Key in the HashMap
 		// if it is then a new number is generated and the while loop runs again
-		while( TCPConnectionsCache.getInstance().getIndexOfClientId(id) != -1) {
+		while( tcpConCache.getIndexOfClientId(id) != -1) {
 			id = random.nextInt(128);
 		}
 		
@@ -168,7 +177,7 @@ public class Registry implements Node{
 		
 		numOfEntriesInRouting = numOfEntries;
 		
-		int numOfMsgNodes = TCPConnectionsCache.getInstance().getClientCount();
+		int numOfMsgNodes = tcpConCache.getClientCount();
 		
 		if( numOfMsgNodes < (2 * numOfEntries)) {
 			System.out.println("There is not enough nodes to use a routing table of this size. Please use a smaller routing table.");
@@ -183,7 +192,7 @@ public class Registry implements Node{
 				
 				RoutingTable tableForNode = createRoutingTable(i, numOfEntries, numOfMsgNodes);
 				
-				ArrayList<Integer> idList = TCPConnectionsCache.getInstance().getIdList(i);
+				ArrayList<Integer> idList = tcpConCache.getIdList(i);
 				
 				sendRoutingTable(i, numOfEntries, tableForNode, idList);
 				
@@ -203,7 +212,7 @@ public class Registry implements Node{
 		byte[] msgBytes = manifestMsg.getBytes();
 		
 		// Send message
-		TCPConnection recevingNode = TCPConnectionsCache.getInstance().getClientConnections().get(index);
+		TCPConnection recevingNode = tcpConCache.getClientConnections().get(index);
 		
 		try {
 			recevingNode.sendTCPMessage(msgBytes);
@@ -237,7 +246,7 @@ public class Registry implements Node{
 			//System.out.println("nextClient index: "+ nextClient);
 			//System.out.println();
 			
-			TCPConnection next = TCPConnectionsCache.getInstance().getClientConnections().get(nextClient);
+			TCPConnection next = tcpConCache.getClientConnections().get(nextClient);
 			
 			RoutingEntry entry = new RoutingEntry(next.getNodeID(), next.getInetAddress(), next.getServerSocketPort());
 			
@@ -264,14 +273,14 @@ public class Registry implements Node{
 	
 	public void printRoutingTables() {
 		
-		int numOfMsgNodes = TCPConnectionsCache.getInstance().getClientCount();
+		int numOfMsgNodes = tcpConCache.getClientCount();
 		
 		for(int i=0; i < numOfMsgNodes; i++) {
 			
 			// Call method to create node's specific routing table message
 			
 			System.out.println();
-			System.out.println("Routing Table for Node: " + TCPConnectionsCache.getInstance().getClientConnections().get(i).getNodeID());
+			System.out.println("Routing Table for Node: " + tcpConCache.getClientConnections().get(i).getNodeID());
 			
 			RoutingTable tableForNode = createRoutingTable(i, numOfEntriesInRouting, numOfMsgNodes);
 			ArrayList<RoutingEntry> routingEntries = tableForNode.getRoutingEntries();
@@ -292,13 +301,13 @@ public class Registry implements Node{
 	
 	public void printMessagingNodes() {
 		
-		int numOfMsgNodes = TCPConnectionsCache.getInstance().getClientCount();
+		int numOfMsgNodes = tcpConCache.getClientCount();
 		System.out.println();
 		System.out.println("Messaging Node List:");
 		
 		for(int i=0; i < numOfMsgNodes; i++) {
 			
-			TCPConnection tempCon = TCPConnectionsCache.getInstance().getClientConnections().get(i);
+			TCPConnection tempCon = tcpConCache.getClientConnections().get(i);
 			
 			System.out.println("Node "+(i+1)+": Hostname: "+tempCon.getInetAddress().getHostName()+"   Port: "+tempCon.getPort()+"   Node ID: "+tempCon.getNodeID());
 			
@@ -307,5 +316,18 @@ public class Registry implements Node{
 		
 	}
 	
+	public void handleStartCmd(int numOfPackets) throws IOException {
+		
+		RegistryRequestsTaskInitiate taskInit = new RegistryRequestsTaskInitiate(numOfPackets);
+		
+		tcpConCache.sendMsgToAllClients( taskInit.getBytes());
+		
+	}
+	
+	public void handleTaskReports(OverlayNodeReportsTaskFinished msg) {
+		
+		System.out.println("Node "+msg.getNodeId()+" has reported their task is finished.");
+		
+	}
 
 }
