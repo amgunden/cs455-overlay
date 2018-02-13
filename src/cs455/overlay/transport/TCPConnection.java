@@ -122,17 +122,18 @@ public class TCPConnection {
 			while (socket != null) {
 				try {
 					dataLength = din.readInt();
-					
+					//System.out.println("TCP Receiver dataLength: "+ dataLength);				
 					byte[] data = new byte[dataLength];
 					din.readFully(data, 0, dataLength);
 					
-					handleReceivedMessage(data);
+					handleReceivedMessage(data);	
 					
 				} catch (SocketException se) {
-					System.out.println(se.getMessage());
+					System.out.println("TCP Receiver Thread SocketException. Message: " +se.getMessage());
 					break;
 				} catch (IOException ioe) {
-					System.out.println(ioe.getMessage()) ;
+					ioe.printStackTrace();
+					System.out.println("TCP Receiver Thread IOException. Message: " +  ioe.toString()) ;
 					break;
 				}
 			}
@@ -150,8 +151,9 @@ public class TCPConnection {
 			dout = new DataOutputStream(socket.getOutputStream());
 		}
 		
-		public void sendData(byte[] dataToSend) throws IOException {
+		public synchronized void sendData(byte[] dataToSend) throws IOException {
 			int dataLength = dataToSend.length;
+			//System.out.println("TCP Sender dataLength: "+ dataLength);
 			dout.writeInt(dataLength);
 			dout.write(dataToSend, 0, dataLength);
 			dout.flush();

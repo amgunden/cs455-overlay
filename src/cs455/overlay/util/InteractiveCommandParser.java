@@ -3,6 +3,7 @@ package cs455.overlay.util;
 import java.io.IOException;
 import java.util.Scanner;
 
+import cs455.overlay.node.MessagingNode;
 import cs455.overlay.node.Node;
 import cs455.overlay.node.Registry;
 
@@ -74,7 +75,7 @@ public class InteractiveCommandParser implements Runnable{
 	public void parseMsgNodeCmd(String cmd) {
 		
 		if( cmd.equals(new String("print-counters-and-diagnostics"))) {
-			printCtrAndDiag();
+			( (MessagingNode) node).printCtrAndDiag();
 		}
 		else if( cmd.equals(new String("exit-overlay"))) {
 			exitOverlay();

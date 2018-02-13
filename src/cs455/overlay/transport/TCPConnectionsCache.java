@@ -143,21 +143,21 @@ public class TCPConnectionsCache {
 		
 		TCPConnection tcpConnection = null;
 		
-		for( TCPConnection clientConnection : clientConns ) {
-			if(clientConnection.getInetAddress().equals(inetAddress)) {
-				tcpConnection = clientConnection;
-			}
-			
-		}
-		
-//		Iterator<TCPConnection> iterator = clientConns.iterator();
-//		while( iterator.hasNext() ) {
-//			TCPConnection temp = iterator.next();
-//			if(temp.getInetAddress().equals(inetAddress)) {
-//				tcpConnection = temp;
+//		for( TCPConnection clientConnection : clientConns ) {
+//			if(clientConnection.getInetAddress().equals(inetAddress)) {
+//				tcpConnection = clientConnection;
 //			}
 //			
 //		}
+		
+		Iterator<TCPConnection> iterator = clientConns.iterator();
+		while( iterator.hasNext() ) {
+			TCPConnection temp = iterator.next();
+			if(temp.getInetAddress().equals(inetAddress)) {
+				tcpConnection = temp;
+			}
+			
+		}
 		
 		return tcpConnection;
 		

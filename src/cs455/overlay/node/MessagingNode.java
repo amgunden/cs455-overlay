@@ -71,7 +71,7 @@ public class MessagingNode implements Node{
 	public void onEvent(Event event) {
 		// TODO Auto-generated method stub
 		
-		System.out.println("onEvent entered");
+		//System.out.println("onEvent entered");
 		
 		if(event instanceof RegistryReportsRegistrationStatus) {
 			System.out.println("RegistryReportsRegistrationStatus Message Received");
@@ -96,7 +96,7 @@ public class MessagingNode implements Node{
 			}
 		}
 		else if(event instanceof OverlayNodeSendsData) {
-			System.out.println("OverlayNodeSendsData Message Received");
+			//System.out.println("OverlayNodeSendsData Message Received");
 			try {
 				handleReceivedData( (OverlayNodeSendsData) event);
 			} catch (IOException e) {
@@ -133,7 +133,7 @@ public class MessagingNode implements Node{
 	
 	public void handleNodeManifest(RegistrySendsNodeManifest manifest) throws IOException {
 		
-		stats =  new StatisticsCollectorAndDisplay();
+		stats =  new StatisticsCollectorAndDisplay(nodeID);
 		
 		routingTable = manifest.getRoutingTable();
 		
@@ -146,7 +146,7 @@ public class MessagingNode implements Node{
 	}
 	
 	public void handleTaskInitiate(RegistryRequestsTaskInitiate taskInit) throws IOException {
-		System.out.println("handleTaskInitiate method entered. Packet number: "+ taskInit.getNumOfPackets());
+		//System.out.println("handleTaskInitiate method entered. Packet number: "+ taskInit.getNumOfPackets());
 		int numOfPackets = taskInit.getNumOfPackets();
 		sendPackets(numOfPackets);
 		
@@ -225,13 +225,13 @@ public class MessagingNode implements Node{
 	
 	public void sendPackets(int numOfPackets) throws IOException {
 		
-		System.out.println("sendPackets entered. numOfPackets: "+numOfPackets);
+		//System.out.println("sendPackets entered. numOfPackets: "+numOfPackets);
 		
 		int numOfOtherNodes = nodeIdList.size();
 		Random random = new Random();
 		
 		for(int i=0; i<numOfPackets; i++) {
-			System.out.println("sendPackets loop entered");
+			//System.out.println("Sending packet "+(i+1)+" of "+numOfPackets);
 			
 			int randIndex = random.nextInt(numOfOtherNodes);
 			int destNodeId = nodeIdList.get(randIndex);
@@ -251,7 +251,8 @@ public class MessagingNode implements Node{
 			stats.incrementSend();
 			stats.addToSendSum(payload);
 			
-			System.out.println("Sent packet to node "+ destNodeId+". Next Hop being to node "+ nextHop.getNodeId());
+			System.out.println("Sending packet to "+ destNodeId+"; next hop "+ nextHop.getNodeId());
+			System.out.println();
 			
 		}
 		
@@ -263,24 +264,24 @@ public class MessagingNode implements Node{
 		
 		ArrayList<RoutingEntry> routingEntries = routingTable.getRoutingEntries();
 		int entSize = routingEntries.size();
-		System.out.println("Entered findNextHop() to find next hop to node: "+nodeId);
+		//System.out.println("Entered findNextHop() to find next hop to node: "+nodeId);
 		
 		for(int i=0; i< entSize; i++) {
 			
-			System.out.println("Entered findNextHop For loop");
+			//System.out.println("Entered findNextHop For loop");
 			
 			// comparing nodeId of entry at i to nodeId and entry at i+1. Want to find where i is less than nodeId and i+1 is more
 			if(routingEntries.get(i).getNodeId() == nodeId) {
-				System.out.print("Return entry the is = to dest");
+				//System.out.print("Return entry the is = to dest");
 				return routingEntries.get(i);
 			}
 			else if(routingEntries.get(i).getNodeId() < nodeId && nodeId < routingEntries.get((i+1)%routingEntries.size()).getNodeId() ) {
-				System.out.println("Returning entry that is the closest without going over");
+				//System.out.println("Returning entry that is the closest without going over");
 				return routingEntries.get(i);
 			}
 			
 		}
-		System.out.println("Returning last in array");
+		//System.out.println("Returning last in array");
 		return routingEntries.get( entSize-1 );
 		
 	}
@@ -292,22 +293,23 @@ public class MessagingNode implements Node{
 			stats.incrementReceive();
 			stats.addToReceiveSum(dataMsg.getPayload());
 			System.out.println("Received packet from node "+ dataMsg.getSourceId());
+			System.out.println();
 			
 		}
 		else {
 			
 			RoutingEntry nextHop = findNextHop(dataMsg.getDestId());
-			
+			System.out.println("NextHop node: "+nextHop.getNodeId());
 			int clientCon = tcpConCache.getIndexOfClientId( nextHop.getNodeId());
 			
-			dataMsg.getHops().add(nodeID);
+			dataMsg.addHop(nodeID);
 			
 			tcpConCache.getClientConnections().get(clientCon).sendTCPMessage(dataMsg.getBytes());
 			
 			stats.incrementRelay();
 			
-			System.out.println("Relaying packet from node "+ dataMsg.getSourceId()+" and going to node "+dataMsg.getDestId()+". Next Hop being to node "+ nextHop.getNodeId());
-			
+			System.out.println("Relaying: src "+ dataMsg.getSourceId()+"; dest "+dataMsg.getDestId()+"; next Node "+ nextHop.getNodeId());
+			System.out.println();
 		}
 		
 	}
@@ -340,6 +342,16 @@ public class MessagingNode implements Node{
 		
 		con.sendTCPMessage( msg.getBytes());
 		
+		printCtrAndDiag();
+		
+		stats.resetCounters();
+		
+		System.out.println("----------------------------Reseting Counters-------------------------");
+	}
+	
+	public void printCtrAndDiag() {
+		System.out.println("Node ID: "+nodeID+": Packets Sent: "+stats.getSendTracker()+"; Packets Relayed: "+stats.getRelayTracker()+"; Packets Received: "+stats.getReceiveTracker());
+		System.out.println("Sent Sum: "+stats.getSendSummation()+"; Received Sum: "+stats.getReceiveSummation());
 	}
 
 

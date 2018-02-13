@@ -2,6 +2,8 @@ package cs455.overlay.util;
 
 public class StatisticsCollectorAndDisplay {
 	
+	int nodeId;
+	
 	int sendTracker;
 	int receiveTracker;
 	
@@ -10,7 +12,8 @@ public class StatisticsCollectorAndDisplay {
 	long sendSummation;
 	long receiveSummation;
 
-	public StatisticsCollectorAndDisplay() {
+	public StatisticsCollectorAndDisplay(int nodeId) {
+		this.nodeId = nodeId;
 		sendTracker = 0;
 		receiveTracker = 0;
 		relayTracker = 0;
@@ -18,23 +21,40 @@ public class StatisticsCollectorAndDisplay {
 		receiveSummation = 0;
 	}
 	
-	public void incrementSend() {
+	public StatisticsCollectorAndDisplay(int nodeId, int sendT, int recT, int relayT, long sendSum, long receiveSum) {
+		this.nodeId = nodeId;
+		sendTracker = sendT;
+		receiveTracker = recT;
+		relayTracker = relayT;
+		sendSummation = sendSum;
+		receiveSummation = receiveSum;
+	}
+	
+	public void resetCounters() {
+		sendTracker = 0;
+		receiveTracker = 0;
+		relayTracker = 0;
+		sendSummation = 0;
+		receiveSummation = 0;		
+	}
+	
+	public synchronized void incrementSend() {
 		sendTracker++;
 	}
 	
-	public void incrementReceive() {
+	public synchronized void incrementReceive() {
 		receiveTracker++;
 	}
 	
-	public void incrementRelay() {
+	public synchronized void incrementRelay() {
 		relayTracker++;
 	}
 	
-	public void addToSendSum(int payload) {
+	public synchronized void addToSendSum(int payload) {
 		sendSummation += payload;
 	}
 	
-	public void addToReceiveSum(int payload) {
+	public synchronized void addToReceiveSum(int payload) {
 		receiveSummation += payload;
 	}
 
@@ -58,6 +78,11 @@ public class StatisticsCollectorAndDisplay {
 		return receiveSummation;
 	}
 	
+	public void print() {
+		System.out.println();
+		System.out.printf("%-15s %-15s %-15s %-15s %-15s %-15s %n", nodeId, sendTracker, receiveTracker, relayTracker, sendSummation, receiveSummation);
+		//System.out.println(nodeId+"\t"+sendTracker+"\t"+receiveTracker+"\t"+relayTracker+"\t"+sendSummation+"\t"+receiveSummation);
+	}
 	
 
 }

@@ -70,6 +70,10 @@ public class OverlayNodeSendsData  implements Event{
 	public ArrayList<Integer> getHops() {
 		return hops;
 	}
+	
+	public void addHop(int nodeId) {
+		hops.add(nodeId);
+	}
 
 	@Override
 	public byte[] getBytes() {

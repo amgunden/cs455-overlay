@@ -13,19 +13,27 @@ import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPConnectionsCache;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.InteractiveCommandParser;
+import cs455.overlay.util.StatisticsCollectorAndDisplay;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.EventFactory;
 import cs455.overlay.wireformats.NodeReportsOverlaySetupStatus;
 import cs455.overlay.wireformats.OverlayNodeReportsTaskFinished;
+import cs455.overlay.wireformats.OverlayNodeReportsTrafficSummary;
 import cs455.overlay.wireformats.OverlayNodeSendsRegistration;
 import cs455.overlay.wireformats.RegistryReportsRegistrationStatus;
 import cs455.overlay.wireformats.RegistryRequestsTaskInitiate;
+import cs455.overlay.wireformats.RegistryRequestsTrafficSummary;
 import cs455.overlay.wireformats.RegistrySendsNodeManifest;
 
 public class Registry implements Node{
 	
 	private int numOfEntriesInRouting;
 	private TCPConnectionsCache tcpConCache;
+	
+	private StatisticsCollectorAndDisplay[] stats;
+	
+	private int nodesFinishedTask = 0;
+	private int trafficSumsReported;
 
 	public Registry(int port) throws IOException {
 		
@@ -72,7 +80,17 @@ public class Registry implements Node{
 		}
 		else if( event instanceof OverlayNodeReportsTaskFinished) {
 			
-			handleTaskReports( (OverlayNodeReportsTaskFinished) event);
+			try {
+				handleTaskReports( (OverlayNodeReportsTaskFinished) event);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		else if( event instanceof OverlayNodeReportsTrafficSummary ) {
+			
+			handleTrafficReports( (OverlayNodeReportsTrafficSummary) event);
 			
 		}
 		
@@ -192,7 +210,9 @@ public class Registry implements Node{
 				
 				RoutingTable tableForNode = createRoutingTable(i, numOfEntries, numOfMsgNodes);
 				
-				ArrayList<Integer> idList = tcpConCache.getIdList(i);
+				int id = tcpConCache.getClientConnections().get(i).getNodeID();
+				
+				ArrayList<Integer> idList = tcpConCache.getIdList(id);
 				
 				sendRoutingTable(i, numOfEntries, tableForNode, idList);
 				
@@ -318,16 +338,94 @@ public class Registry implements Node{
 	
 	public void handleStartCmd(int numOfPackets) throws IOException {
 		
+		nodesFinishedTask =0;
+		
 		RegistryRequestsTaskInitiate taskInit = new RegistryRequestsTaskInitiate(numOfPackets);
 		
 		tcpConCache.sendMsgToAllClients( taskInit.getBytes());
 		
 	}
 	
-	public void handleTaskReports(OverlayNodeReportsTaskFinished msg) {
+	public void handleTaskReports(OverlayNodeReportsTaskFinished msg) throws IOException {
 		
 		System.out.println("Node "+msg.getNodeId()+" has reported their task is finished.");
+		nodesFinishedTask++;
+		int numClients = tcpConCache.getClientCount();
+		//System.out.println(nodesFinishedTask);
+		//System.out.println(numClients);
+		//System.out.println(nodesFinishedTask == numClients);
+		if( nodesFinishedTask == numClients ) {
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			requestTrafficSummary();
+		}
 		
+	}
+	
+	public void requestTrafficSummary() throws IOException {
+		
+		System.out.println("requestTrafficSummary Entered");
+		
+		RegistryRequestsTrafficSummary summaryReq = new RegistryRequestsTrafficSummary();
+		
+		tcpConCache.sendMsgToAllClients( summaryReq.getBytes() );
+		
+		stats = new StatisticsCollectorAndDisplay[ tcpConCache.getClientCount() ];
+		
+		trafficSumsReported =0;
+		
+		System.out.println("requestTrafficSummary Finished");
+	}
+	
+	public void handleTrafficReports(OverlayNodeReportsTrafficSummary msg){
+		
+		System.out.println("handleTrafficSummary Entered");
+		
+		int nodeId = msg.getNodeId();
+		
+		int index = tcpConCache.getIndexOfClientId(nodeId);
+		
+		trafficSumsReported++;
+		
+		StatisticsCollectorAndDisplay nodeStats = new StatisticsCollectorAndDisplay(nodeId, msg.getPacketsSent(), msg.getPacketsReceived(), msg.getPacketsRelayed(), msg.getSumOfSent(), msg.getSumOfReceived());
+		
+		stats[index] = nodeStats;
+		
+		if( trafficSumsReported == tcpConCache.getClientCount()) {
+			printSummaries();
+		}
+		
+	}
+	
+	public void printSummaries() {
+		
+		int sumSent=0;
+		int sumRec=0;
+		int sumRelayed=0;
+		long sumPacSent=0;
+		long sumPacRec=0;
+		
+		System.out.printf("%-15s %-15s %-15s %-15s %-15s %-15s %n", "Node ID" , "Packets Sent", "PacketsReceived", "PacketsRelayed", "Sum of Packets Sent", "Sum of Packets Received");
+		//System.out.println("Node ID\tPackets Sent\tPacketsReceived\tPacketsRelayed\tSum of Packets Sent\tSum of Packets Received");	
+		
+		for(int i=0; i< stats.length; i++) {
+			sumSent += stats[i].getSendTracker();
+			sumRec += stats[i].getReceiveTracker();
+			sumRelayed += stats[i].getRelayTracker();
+			sumPacSent += stats[i].getSendSummation();
+			sumPacRec += stats[i].getReceiveSummation();
+			
+			stats[i].print();
+			
+		}
+		
+		System.out.println();
+		System.out.printf("%-15s %-15s %-15s %-15s %-15s %-15s %n", "Sum", sumSent, sumRec, sumRelayed, sumPacSent, sumPacRec);
+		//System.out.println("Sum\t"+sumSent+"\t"+sumRec+"\t"+sumRelayed+"\t"+sumPacSent+"\t"+sumPacRec);
 	}
 
 }
