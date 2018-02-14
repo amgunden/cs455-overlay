@@ -14,8 +14,6 @@ public class TCPServerThread implements Runnable{
 	private TCPConnectionsCache tcpConCache;
 
 	public TCPServerThread(int portNum) throws IOException {
-		// TODO Auto-generated constructor stub
-
 		serverSocket = new ServerSocket(portNum);
 		tcpConCache = TCPConnectionsCache.getInstance();
 		
@@ -31,7 +29,7 @@ public class TCPServerThread implements Runnable{
 		System.out.println("\r\nRunning ServerSocket Thread: " + "Host=" + serverSocket.getInetAddress().getHostAddress() +" Port=" + serverSocket.getLocalPort());
 		
 		try {
-			while (true) {
+			while (!Thread.currentThread().isInterrupted()) {
 
 				Socket clientSocket = serverSocket.accept();
 				//int port = clientSocket.getPort();
@@ -72,6 +70,9 @@ public class TCPServerThread implements Runnable{
 				
 				
 			} 
+			
+			serverSocket.close();
+			
 		} catch (IOException e) {
 			// TODO: handle exception
 		}

@@ -125,7 +125,6 @@ public class OverlayNodeReportsTrafficSummary  implements Event{
 
 	@Override
 	public int getType() {
-		// TODO Auto-generated method stub
 		return messageType;
 	}
 

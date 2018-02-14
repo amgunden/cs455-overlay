@@ -41,7 +41,7 @@ public class TCPConnectionsCache {
 	}
 	
 	
-	// TODO Check and maybe delete
+	// DONE Check and maybe delete - many methods use it now ---> Should be refactored, letting the reference loose
 	// May not be a needed method, only generateID was using it, now uses clientIdExists
 	public ArrayList<TCPConnection> getClientConnections() {
 		return clientConns;
@@ -69,13 +69,6 @@ public class TCPConnectionsCache {
 		
 		TCPConnection tcpConnection = null;
 		
-//		for( TCPConnection con : existingTCPConnections) {
-//			if( con.getInetAddress().equals(inetAddress)) {
-//				tcpConnection = con;
-//			}
-//		}
-		
-		
 		Iterator<TCPConnection> iterator = existingTCPConnections.iterator();
 		while( iterator.hasNext() ) {
 			TCPConnection temp = iterator.next();
@@ -84,14 +77,28 @@ public class TCPConnectionsCache {
 			}
 			
 		}
-		
 		return tcpConnection;
 	}
 	
+	public TCPConnection getClientByIpAddr(InetAddress inetAddress, int port) {
+		
+		// Iterate through clientConnections HashMap and get InetAddress
+		// Compare address to argument
+		
+		TCPConnection tcpConnection = null;
+		
+		Iterator<TCPConnection> iterator = clientConns.iterator();
+		while( iterator.hasNext() ) {
+			TCPConnection temp = iterator.next();
+			if(temp.getInetAddress().equals(inetAddress) && temp.serverSocketPort == port) {
+				tcpConnection = temp;
+			}
+		}
+		return tcpConnection;
+	}
 	
 	public Socket createTCPConnection(String host, int port) {
 		
-		// TODO Need Error checking so connection isn't made to node that already has established connection
 		Socket newConnection = null;
 		try {
 			
@@ -136,32 +143,6 @@ public class TCPConnectionsCache {
 		existingTCPConnections.add(newTCP);
 	}
 	
-	public TCPConnection getClientByIpAddr(InetAddress inetAddress) {
-		
-		// Iterate through clientConnections HashMap and get InetAddress
-		// Compare address to argument
-		
-		TCPConnection tcpConnection = null;
-		
-//		for( TCPConnection clientConnection : clientConns ) {
-//			if(clientConnection.getInetAddress().equals(inetAddress)) {
-//				tcpConnection = clientConnection;
-//			}
-//			
-//		}
-		
-		Iterator<TCPConnection> iterator = clientConns.iterator();
-		while( iterator.hasNext() ) {
-			TCPConnection temp = iterator.next();
-			if(temp.getInetAddress().equals(inetAddress)) {
-				tcpConnection = temp;
-			}
-			
-		}
-		
-		return tcpConnection;
-		
-	}
 	
 	// Add a client connection to the arraylist to keep it in order or nodeIDs
 	public void addClientConnection(int id, TCPConnection conn) {
@@ -245,6 +226,32 @@ public class TCPConnectionsCache {
 			
 		}
 		
+	}
+	
+	public void removeClient(int nodeId) {
+		
+		int removeIndex = getIndexOfClientId(nodeId);
+		
+		clientConns.remove(removeIndex);
+		
+	}
+	
+	public void interuptAllTcpReceivers() {
+		Iterator<TCPConnection> iterator = clientConns.iterator();
+		while( iterator.hasNext() ) {
+			TCPConnection temp = iterator.next();
+			temp.interuptTcpReceiver();
+			
+		}
+	}
+	
+	public void closeStreamTcpSenders() throws IOException {
+		Iterator<TCPConnection> iterator = clientConns.iterator();
+		while( iterator.hasNext() ) {
+			TCPConnection temp = iterator.next();
+			temp.closeSenderStream();
+			
+		}
 	}
 
 }

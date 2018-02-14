@@ -10,6 +10,7 @@ import cs455.overlay.routing.RoutingTable;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPConnectionsCache;
 import cs455.overlay.transport.TCPServerThread;
+import cs455.overlay.util.InteractiveCommandParser;
 import cs455.overlay.util.StatisticsCollectorAndDisplay;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.EventFactory;
@@ -17,7 +18,9 @@ import cs455.overlay.wireformats.NodeReportsOverlaySetupStatus;
 import cs455.overlay.wireformats.OverlayNodeReportsTaskFinished;
 import cs455.overlay.wireformats.OverlayNodeReportsTrafficSummary;
 import cs455.overlay.wireformats.OverlayNodeSendsData;
+import cs455.overlay.wireformats.OverlayNodeSendsDeregistration;
 import cs455.overlay.wireformats.OverlayNodeSendsRegistration;
+import cs455.overlay.wireformats.RegistryReportsDeregistrationStatus;
 import cs455.overlay.wireformats.RegistryReportsRegistrationStatus;
 import cs455.overlay.wireformats.RegistryRequestsTaskInitiate;
 import cs455.overlay.wireformats.RegistryRequestsTrafficSummary;
@@ -33,6 +36,9 @@ public class MessagingNode implements Node{
 	
 	private TCPConnectionsCache tcpConCache;
 	
+	private Thread serverThread;
+	private Thread cmdParser;
+	
 	StatisticsCollectorAndDisplay stats;
 	
 	public MessagingNode(String regHostname, int port) throws IOException {
@@ -45,8 +51,11 @@ public class MessagingNode implements Node{
 		// Get port that the ServerSocket of this node is listening on
 		serverSocketPort = tcpServer.getServerSocketPort();
 		
-		Thread serverThread = new Thread(tcpServer);
+		serverThread = new Thread(tcpServer);
 		serverThread.start();
+		
+		cmdParser = new Thread(new InteractiveCommandParser(this));
+		cmdParser.start();
 		
 		registryHostname = regHostname;
 		
@@ -69,7 +78,6 @@ public class MessagingNode implements Node{
 
 	@Override
 	public void onEvent(Event event) {
-		// TODO Auto-generated method stub
 		
 		//System.out.println("onEvent entered");
 		
@@ -107,6 +115,14 @@ public class MessagingNode implements Node{
 		else if(event instanceof RegistryRequestsTrafficSummary) {
 			try {
 				handleSummaryRequest();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else if(event instanceof RegistryReportsDeregistrationStatus) {
+			try {
+				handleDeregistrationStatus( (RegistryReportsDeregistrationStatus) event);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -195,7 +211,7 @@ public class MessagingNode implements Node{
 			regCon.sendTCPMessage( setupStatus.getBytes());
 		}
 		else {
-			setupStatus = new NodeReportsOverlaySetupStatus(-1, "Overlay setup was successful");
+			setupStatus = new NodeReportsOverlaySetupStatus(-1, "Overlay setup was not successful");
 			
 			regCon.sendTCPMessage( setupStatus.getBytes());
 		}
@@ -221,6 +237,33 @@ public class MessagingNode implements Node{
 		OverlayNodeSendsRegistration regMessage = new OverlayNodeSendsRegistration(regSocket.getLocalAddress(), serverSocketPort);
 		tcpConCache.sendMessage(-1, regMessage.getBytes());
 		
+	}
+		
+	public void sendDeregistrationMsg() {
+		System.out.println("Enter sendDereg");
+		
+		int regIndex = tcpConCache.getIndexOfClientId(-1);
+		TCPConnection regCon = tcpConCache.getClientConnections().get(regIndex);
+		
+		OverlayNodeSendsDeregistration deRegMessage = new OverlayNodeSendsDeregistration( regCon.getSocket().getLocalAddress(), regCon.getSocket().getLocalPort(), nodeID);
+		tcpConCache.sendMessage(-1, deRegMessage.getBytes());
+		System.out.println("Deregistration Message sent to Reg");
+		
+	}
+	
+	public void handleDeregistrationStatus(RegistryReportsDeregistrationStatus msg) throws IOException {
+		
+		if(msg.getRegStatus() == -1) {
+			// error
+		}
+		else {
+			// exit and terminate process
+			cmdParser.interrupt();
+			serverThread.interrupt();
+			tcpConCache.interuptAllTcpReceivers();
+			tcpConCache.closeStreamTcpSenders();
+			System.exit(0);
+		}
 	}
 	
 	public void sendPackets(int numOfPackets) throws IOException {

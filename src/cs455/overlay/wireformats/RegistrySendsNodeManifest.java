@@ -38,7 +38,6 @@ public class RegistrySendsNodeManifest  implements Event{
 	}
 
 	public RegistrySendsNodeManifest(int size, RoutingTable routingTable, ArrayList<Integer> idList) {
-		// TODO Auto-generated constructor stub
 		routingTableSize = size;
 		this.routingTable = routingTable;
 		nodeIdList = idList;
@@ -136,7 +135,7 @@ public class RegistrySendsNodeManifest  implements Event{
 			
 			for(int i=0; i<routingTableSize; i++) {
 				
-				// TODO add methods to routing table so calls to routing table for info arent so long
+				// TODO add methods to routing table so calls to routing table for info aren't so long
 				
 				//int nodeID = routingEntries[i].getNodeId();
 				int nodeID = routingTable.getRoutingEntries().get(i).getNodeId();

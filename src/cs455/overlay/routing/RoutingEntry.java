@@ -34,8 +34,7 @@ public class RoutingEntry {
 	}
 
 	public RoutingEntry(int id, InetAddress address, int port) {
-		// TODO Auto-generated constructor stub
-		
+	
 		nodeId = id;
 		addr=address;
 		this.serverSocketPort = port;

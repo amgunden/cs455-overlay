@@ -12,21 +12,16 @@ import java.net.UnknownHostException;
 
 public class OverlayNodeSendsRegistration  implements Event{
 	
-	private int messageType;
+	private int messageType = Protocol.OVERLAY_NODE_SENDS_REGISTRATION;
+	private String identifier = "OVERLAY_NODE_SENDS_REGISTRATION";	
+	
 	private byte[] inetAddress;
 	private int serverSocketPort;
 	
 
-//	private long timestamp;
-	private String identifier;
-//	private int tracker;
-
-
 	public OverlayNodeSendsRegistration(InetAddress inetAddr, int port) {
 		// Constructor used to create message to send
-		identifier = "OVERLAY_NODE_SENDS_REGISTRATION";
-		messageType = Protocol.OVERLAY_NODE_SENDS_REGISTRATION;
-		
+	
 		inetAddress = inetAddr.getAddress();
 		this.serverSocketPort = port;
 		
@@ -34,8 +29,6 @@ public class OverlayNodeSendsRegistration  implements Event{
 	
 	public OverlayNodeSendsRegistration(byte[] message) throws IOException {
 		// Constructor used to create message from received bytes
-		identifier = "OVERLAY_NODE_SENDS_REGISTRATION";
-		messageType = Protocol.OVERLAY_NODE_SENDS_REGISTRATION;
 		
 		extractMessage(message);
 	}
@@ -61,7 +54,6 @@ public class OverlayNodeSendsRegistration  implements Event{
 
 	@Override
 	public byte[] getBytes() {
-		// TODO Auto-generated method stub
 		
 		byte[] marshalledBytes = null;
 		

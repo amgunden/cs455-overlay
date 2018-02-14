@@ -10,19 +10,16 @@ import java.io.IOException;
 
 public class RegistryReportsRegistrationStatus  implements Event{
 	
-	private int messageType;
+	private int messageType = Protocol.REGISTRY_REPORTS_REGISTRATION_STATUS;
+	private String identifier = "REGISTRY_REPORTS_REGISTRATION_STATUS";
+	
 	private int regStatus;
 	private String infoMessage;
 
-	private String identifier;
+
 	
-	public RegistryReportsRegistrationStatus(int regStatus, String infoMessage) {
-		// TODO Auto-generated constructor stub
-		
+	public RegistryReportsRegistrationStatus(int regStatus, String infoMessage) {		
 		// Constructor used to create message to send
-		identifier = "REGISTRY_REPORTS_REGISTRATION_STATUS";
-		messageType = Protocol.REGISTRY_REPORTS_REGISTRATION_STATUS;
-		
 		this.regStatus = regStatus;
 		this.infoMessage = infoMessage;
 		
@@ -30,9 +27,6 @@ public class RegistryReportsRegistrationStatus  implements Event{
 	
 	public RegistryReportsRegistrationStatus(byte[] message) throws IOException {
 		// Constructor used to create message from received bytes
-		identifier = "REGISTRY_REPORTS_REGISTRATION_STATUS";
-		messageType = Protocol.REGISTRY_REPORTS_REGISTRATION_STATUS;
-		
 		extractMessage(message);
 		
 	}

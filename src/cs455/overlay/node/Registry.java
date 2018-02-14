@@ -19,7 +19,9 @@ import cs455.overlay.wireformats.EventFactory;
 import cs455.overlay.wireformats.NodeReportsOverlaySetupStatus;
 import cs455.overlay.wireformats.OverlayNodeReportsTaskFinished;
 import cs455.overlay.wireformats.OverlayNodeReportsTrafficSummary;
+import cs455.overlay.wireformats.OverlayNodeSendsDeregistration;
 import cs455.overlay.wireformats.OverlayNodeSendsRegistration;
+import cs455.overlay.wireformats.RegistryReportsDeregistrationStatus;
 import cs455.overlay.wireformats.RegistryReportsRegistrationStatus;
 import cs455.overlay.wireformats.RegistryRequestsTaskInitiate;
 import cs455.overlay.wireformats.RegistryRequestsTrafficSummary;
@@ -63,7 +65,6 @@ public class Registry implements Node{
 
 	@Override
 	public void onEvent(Event event) {
-		// TODO Auto-generated method stub
 		
 		if(event instanceof OverlayNodeSendsRegistration) {
 			try {
@@ -93,6 +94,11 @@ public class Registry implements Node{
 			handleTrafficReports( (OverlayNodeReportsTrafficSummary) event);
 			
 		}
+		else if( event instanceof OverlayNodeSendsDeregistration) {
+			
+			handleDeregistration( (OverlayNodeSendsDeregistration) event);
+			
+		}
 		
 	}
 	
@@ -116,47 +122,37 @@ public class Registry implements Node{
 			
 			TCPConnection tcpConnection = tcpConCache.getTCPConByIpAddr( nodeRegistration.getInetAddress());
 			
+			RegistryReportsRegistrationStatus regMsg = null;
+			
 			if( tcpConnection == null) {
 				System.out.println("Returned TCPConnection is null");
 			}
-			
-			tcpConnection.setServerSocketPort(nodeRegistration.getServerSocketPort());
-			/*
-			 Exception in thread "Thread-2" java.lang.NullPointerException
-				at cs455.overlay.node.Registry.registerNode(Registry.java:90)
-				at cs455.overlay.node.Registry.onEvent(Registry.java:56)
-				at cs455.overlay.wireformats.EventFactory.getEvent(EventFactory.java:38)
-				at cs455.overlay.transport.TCPConnection.handleReceivedMessage(TCPConnection.java:89)
-				at cs455.overlay.transport.TCPConnection$TCPReceiverThread.run(TCPConnection.java:115)
-				at java.lang.Thread.run(Thread.java:748) 
-			 */
-			
-			InetAddress socketAddr = tcpConnection.getInetAddress();
-			InetAddress givenAddr = nodeRegistration.getInetAddress();
-			
-			// TODO change to .equals ?
-			if( socketAddr != givenAddr) {
-				// Send failure message as there is a mismatch in the address specified vs addr in socket
+			else if( registerMismatch(nodeRegistration, tcpConnection) ) {
+				regMsg = new RegistryReportsRegistrationStatus(-1, "Registration request was unsuccessful. There is a mismatch between the address that is specified in the registration request and the IP address related to this connection");
 				
 			}
-			
-			// Check if node is already in ClientConnections HashMap
-			if( tcpConCache.getClientByIpAddr(givenAddr) != null) {
-				// The node had previously registered and has a valid entry in its registry.
+			else if( registerDuplicate(nodeRegistration)) {
+				regMsg = new RegistryReportsRegistrationStatus(-1, "Registration request was unsuccessful. This node has already been registered.");
+				
 			}
+			else {
 			
-			// IF NO ERROR
-			// registry generates a unique identifier (between 0-127) for the node while
-			// ensuring that there are no duplicate IDs being assigned.
-			int newNodeID = generateUniqueID();
+				tcpConnection.setServerSocketPort(nodeRegistration.getServerSocketPort());
+	
+				// IF NO ERROR
+				// registry generates a unique identifier (between 0-127) for the node while
+				// ensuring that there are no duplicate IDs being assigned.
+				int newNodeID = generateUniqueID();
+							
+				// Add socket and connection info to clientConnections
+				// DONE check
+				tcpConCache.addClientConnection(newNodeID, tcpConnection);
+				
+				int clientCount = tcpConCache.getClientCount();
 						
-			// Add socket and connection info to clientConnections
-			// TODO check
-			tcpConCache.addClientConnection(newNodeID, tcpConnection);
-			
-			int clientCount = tcpConCache.getClientCount();
-			
-			RegistryReportsRegistrationStatus regMsg = new RegistryReportsRegistrationStatus(newNodeID, "Registration request successful. The number of messaging nodes currently constituting the overlay is " + clientCount);
+				regMsg = new RegistryReportsRegistrationStatus(newNodeID, "Registration request successful. The number of messaging nodes currently constituting the overlay is " + clientCount);
+				
+			}
 			
 			tcpConnection.sendTCPMessage(regMsg.getBytes());
 			System.out.println("RegistryReportsRegistrationStatus Message Sent");
@@ -168,6 +164,36 @@ public class Registry implements Node{
 
 		
 	}
+	
+	public boolean registerMismatch(OverlayNodeSendsRegistration nodeRegistration, TCPConnection tcpConnection) throws UnknownHostException {
+		
+		InetAddress socketAddr = tcpConnection.getInetAddress();
+		InetAddress givenAddr = nodeRegistration.getInetAddress();
+		
+		// DONE change to .equals
+		if( !socketAddr.equals(givenAddr)) {
+			// Send failure message as there is a mismatch in the address specified vs addr in socket
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public boolean registerDuplicate(OverlayNodeSendsRegistration nodeRegistration) throws UnknownHostException {
+		
+		InetAddress givenAddr = nodeRegistration.getInetAddress();
+		int port = nodeRegistration.getServerSocketPort();
+		
+		// DONE Check if node is already in ClientConnections
+		if( tcpConCache.getClientByIpAddr(givenAddr, port) != null) {
+				// The node had previously registered and has a valid entry in its registry.
+			return true;
+		}
+		
+		return false;
+	}
+	
+	
 	
 	public int generateUniqueID() {
 		
@@ -245,7 +271,6 @@ public class Registry implements Node{
 	
 	public RoutingTable createRoutingTable(int currentNodeIndex, int numInRoutingTable, int nodeCount) {
 		
-		
 		// Nr = number in routing table
 		// node distances, powers of 2; 2^0, 2^1, ..., 2^(Nr-1)
 		// Wrap-around needed ---  (index + distance) mod (number of nodes)
@@ -253,19 +278,10 @@ public class Registry implements Node{
 		RoutingTable routingTable = new RoutingTable();
 		
 		for(int i=0; i<numInRoutingTable; i++) {
-			//System.out.println("Count: "+ count);
-			
-			// TODO check casting and ints relationship with pow
-			//System.out.println("i = " + i);
+
 			int nextOffset = (int) Math.pow(2, i);
-			//System.out.println("nextOffSet: " + nextOffset + " currentNodeIndex: " + currentNodeIndex);
-			//int count = TCPConnectionsCache.getInstance().getClientCount();
-			//System.out.println("Count: "+ nodeCount);
-			//System.out.println("NodeCount from instance: " + count);
 			int nextClient = (currentNodeIndex + nextOffset) % nodeCount;
-			//System.out.println("nextClient index: "+ nextClient);
-			//System.out.println();
-			
+
 			TCPConnection next = tcpConCache.getClientConnections().get(nextClient);
 			
 			RoutingEntry entry = new RoutingEntry(next.getNodeID(), next.getInetAddress(), next.getServerSocketPort());
@@ -426,6 +442,59 @@ public class Registry implements Node{
 		System.out.println();
 		System.out.printf("%-15s %-15s %-15s %-15s %-15s %-15s %n", "Sum", sumSent, sumRec, sumRelayed, sumPacSent, sumPacRec);
 		//System.out.println("Sum\t"+sumSent+"\t"+sumRec+"\t"+sumRelayed+"\t"+sumPacSent+"\t"+sumPacRec);
+	}
+	
+	public void handleDeregistration(OverlayNodeSendsDeregistration msg) {
+		
+		// Registry should check to see that request is a valid one by checking
+		// (1) where the message originated
+		// (2) whether this node was previously registered
+		// Error messages should be returned in case of a mismatch in the addresses or if the messaging node is not registered with the overlay.
+		
+		int deregNodeId = msg.getNodeId();
+		
+		int index = tcpConCache.getIndexOfClientId(deregNodeId);
+		
+		if( index == -1) {
+			// TODO handle de-reg errors
+			// Error: node was not found in clientConnections array
+			
+			// Send error de-registration status
+		}
+		
+		TCPConnection tcpCon = tcpConCache.getClientConnections().get(index);
+				
+		if( msg.getInetAddress() != tcpCon.getInetAddress().getAddress() ) {
+			// Error socket address doesnt match inet sent
+			
+		}
+		
+		tcpConCache.removeClient(deregNodeId);
+		
+		// close the socket or have msgNode close it
+		
+		RegistryReportsDeregistrationStatus deregStatus = new RegistryReportsDeregistrationStatus(deregNodeId, "De-Registration request successful. The number of messaging nodes currently constituting the overlay is " + tcpConCache.getClientCount());
+		
+		
+		try {
+			
+			tcpCon.sendTCPMessage( deregStatus.getBytes());
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		tcpCon.interuptTcpReceiver();
+		try {
+			tcpCon.closeSenderStream();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println("RegistryReportsDeRegistrationStatus Message Sent");
+		
 	}
 
 }

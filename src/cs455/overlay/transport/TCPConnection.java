@@ -27,6 +27,8 @@ public class TCPConnection {
 	//TCPReceiverThread tcpReceiver;
 	TCPSender tcpSender;
 	
+	Thread tcpReceiverThread;
+	
 	public int getServerSocketPort() {
 		return serverSocketPort;
 	}
@@ -59,33 +61,15 @@ public class TCPConnection {
 		
 		this.socket = socket;
 		
-		Thread tcpReceiverThread = new Thread( new TCPReceiverThread(this.socket));
+		tcpReceiverThread = new Thread( new TCPReceiverThread(this.socket));
 		tcpReceiverThread.start();
 		
 		tcpSender = new TCPSender(this.socket);
 		
 	}
-	
-
-	/*
-	public TCPConnection(InetAddress inetAddr, Socket socket, int port) throws IOException {
-		// TODO Auto-generated constructor stub
-		
-		this.inetAddress = inetAddr;
-		this.port = port;
-		this.socket = socket;
-		
-		Thread tcpReceiverThread = new Thread( new TCPReceiverThread(this.socket));
-		tcpReceiverThread.start();
-		
-		tcpSender = new TCPSender(this.socket);
-	}
-	*/
 	
 	// Junit constructor
-	public TCPConnection(InetAddress inetAddr, int port) throws IOException {
-		// TODO Auto-generated constructor stub
-		
+	public TCPConnection(InetAddress inetAddr, int port) throws IOException {		
 		this.inetAddress = inetAddr;
 		this.port = port;
 
@@ -105,6 +89,10 @@ public class TCPConnection {
 		
 	}
 	
+	public void interuptTcpReceiver() {
+		tcpReceiverThread.interrupt();
+	}
+	
 	public class TCPReceiverThread implements Runnable {
 		
 		private Socket socket;
@@ -119,7 +107,7 @@ public class TCPConnection {
 		public void run() {
 			int dataLength;
 			
-			while (socket != null) {
+			while ( (socket != null) && !Thread.currentThread().isInterrupted()) {
 				try {
 					dataLength = din.readInt();
 					//System.out.println("TCP Receiver dataLength: "+ dataLength);				
@@ -137,6 +125,15 @@ public class TCPConnection {
 					break;
 				}
 			}
+			
+			try {
+				din.close();
+				socket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 
 	}
@@ -158,6 +155,14 @@ public class TCPConnection {
 			dout.write(dataToSend, 0, dataLength);
 			dout.flush();
 		}
+		
+		public void closeStream() throws IOException {
+			dout.close();
+		}
+	}
+	
+	public void closeSenderStream() throws IOException {
+		tcpSender.closeStream();
 	}
 	
 
