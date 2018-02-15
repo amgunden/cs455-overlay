@@ -20,6 +20,30 @@ public class OverlayNodeReportsTrafficSummary  implements Event{
 	private int packetsReceived;
 	private long sumOfReceived; 
 
+	public int getNodeId() {
+		return nodeId;
+	}
+
+	public int getPacketsSent() {
+		return packetsSent;
+	}
+
+	public int getPacketsRelayed() {
+		return packetsRelayed;
+	}
+
+	public long getSumOfSent() {
+		return sumOfSent;
+	}
+
+	public int getPacketsReceived() {
+		return packetsReceived;
+	}
+
+	public long getSumOfReceived() {
+		return sumOfReceived;
+	}
+
 	public OverlayNodeReportsTrafficSummary(int id, int sent, int relayed, long sumSent, int received, long sumReceived) {
 		this.nodeId = id;
 		this.packetsSent = sent;
@@ -101,7 +125,6 @@ public class OverlayNodeReportsTrafficSummary  implements Event{
 
 	@Override
 	public int getType() {
-		// TODO Auto-generated method stub
 		return messageType;
 	}
 

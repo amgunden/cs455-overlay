@@ -3,6 +3,7 @@ package cs455.overlay.util;
 import java.io.IOException;
 import java.util.Scanner;
 
+import cs455.overlay.node.MessagingNode;
 import cs455.overlay.node.Node;
 import cs455.overlay.node.Registry;
 
@@ -11,17 +12,23 @@ public class InteractiveCommandParser implements Runnable{
 	Node node;
 
 	public InteractiveCommandParser(Node node) {
-		// TODO Auto-generated constructor stub
 		this.node = node;
 	}
 
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
 		
-		while (true) {
+		while ( !Thread.currentThread().isInterrupted() ) {
 			Scanner scanner = new Scanner(System.in);
-			System.out.println("Enter command: ");
+			
+			if( node instanceof Registry) {
+				System.out.println("Registry Node - Enter command:  ");
+			}
+			else {
+				System.out.println("Messaging Node #"+((MessagingNode)node).getNodeID()+" - Enter command:  ");
+			}
+			
+			
 			String inputCmd = scanner.nextLine();
 			if (node instanceof Registry) {
 				parseRegisterCmd(inputCmd);
@@ -40,12 +47,18 @@ public class InteractiveCommandParser implements Runnable{
 			( (Registry) node).printMessagingNodes();
 		}
 		else if( splitCmd[0].equals(new String("setup-overlay"))) {
-			// TODO add error checking for command with no number ---> default 3
+			// DONE add error checking for command with no number ---> default 3
 			if(splitCmd.length == 1) {
-				setupOverlay(3);
+				((Registry) node).handleOverlaySetup(3);
 			}
 			else {
-				setupOverlay(Integer.parseInt(splitCmd[1]));
+				int routeTableSize = Integer.parseInt(splitCmd[1]);
+				if( routeTableSize < 1) {
+					System.out.println("Routing Table must have atleast one entry. Please re-enter the command");
+				}
+				else {
+					((Registry) node).handleOverlaySetup(routeTableSize);
+				}
 			}
 		}
 		else if( splitCmd[0].equals( new String("list-routing-tables"))) {
@@ -53,15 +66,24 @@ public class InteractiveCommandParser implements Runnable{
 
 		}
 		else if( splitCmd[0].equals(new String("start"))) {
-			// TODO add error checking for command with no number
-			try {
-				( (Registry) node).handleStartCmd( Integer.parseInt(splitCmd[1]) );
-			} catch (NumberFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			// DONE add error checking for command with no number
+			
+			if( splitCmd.length == 1) {
+				System.out.println("The start command requires the number of messages be specified. Please re-enter the command");
+			}
+			else if( Integer.parseInt(splitCmd[1]) <1) {
+				System.out.println("One or more messages must be sent. Please re-enter the command");
+			}
+			else {
+				try {
+					( (Registry) node).handleStartCmd( Integer.parseInt(splitCmd[1]));
+				} catch (NumberFormatException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		else {
@@ -74,10 +96,11 @@ public class InteractiveCommandParser implements Runnable{
 	public void parseMsgNodeCmd(String cmd) {
 		
 		if( cmd.equals(new String("print-counters-and-diagnostics"))) {
-			printCtrAndDiag();
+			( (MessagingNode) node).printCtrAndDiag();
 		}
 		else if( cmd.equals(new String("exit-overlay"))) {
-			exitOverlay();
+			System.out.println("Send dereg cmd receiver");
+			( (MessagingNode) node).sendDeregistrationMsg();
 		}
 		else {
 			System.out.println("Command not recognized. Please re-enter the command");
@@ -85,29 +108,6 @@ public class InteractiveCommandParser implements Runnable{
 		
 	}
 	
-	public void listMsgNodes() {
-		System.out.println("List Message Nodes Command Received");
-	}
-	
-	public void setupOverlay(int numEntries) {
-		System.out.println("Setup Overlay Command Received for number of entries: "+ numEntries);
-		((Registry) node).handleOverlaySetup(numEntries);
-	}
-	
-//	public void listRoutingTables() {
-//		System.out.println("List Routing Table Command Received");
-//	}
-	
-	public void start(int numOfMsgs) {
-		System.out.println("Start Command Received. Number of messages: "+ numOfMsgs);
-	}
-	
-	public void printCtrAndDiag() {
-		System.out.println("Print Counters and Diagnostics Command Received");
-	}
-	
-	public void exitOverlay() {
-		System.out.println("Exit Overlay Command Received");
-	}
+
 
 }

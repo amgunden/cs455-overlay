@@ -7,7 +7,6 @@ public class RoutingTable {
 	private ArrayList<RoutingEntry> routingEntries;
 
 	public RoutingTable() {
-		// TODO Auto-generated constructor stub
 		routingEntries =  new ArrayList<RoutingEntry>();
 	}
 	

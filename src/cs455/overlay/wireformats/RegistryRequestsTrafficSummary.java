@@ -56,7 +56,6 @@ public class RegistryRequestsTrafficSummary  implements Event{
 
 	@Override
 	public int getType() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 

@@ -43,11 +43,11 @@ public class EventFactory {
 			//return new RegistryReportsRegistrationStatus();
 		}
 		else if(type == 4) {
-			node.onEvent( new OverlayNodeSendsDeregistration() );
+			node.onEvent( new OverlayNodeSendsDeregistration(incomingMessage) );
 			//return new OverlayNodeSendsDeregistration();
 		}
 		else if(type == 5) {
-			node.onEvent( new RegistryReportsDeregistrationStatus() );
+			node.onEvent( new RegistryReportsDeregistrationStatus(incomingMessage) );
 			//return new RegistryReportsDeregistrationStatus();
 		}
 		else if(type == 6) {
