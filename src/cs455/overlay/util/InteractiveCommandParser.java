@@ -20,7 +20,15 @@ public class InteractiveCommandParser implements Runnable{
 		
 		while ( !Thread.currentThread().isInterrupted() ) {
 			Scanner scanner = new Scanner(System.in);
-			System.out.print("Enter command:  ");
+			
+			if( node instanceof Registry) {
+				System.out.println("Registry Node - Enter command:  ");
+			}
+			else {
+				System.out.println("Messaging Node #"+((MessagingNode)node).getNodeID()+" - Enter command:  ");
+			}
+			
+			
 			String inputCmd = scanner.nextLine();
 			if (node instanceof Registry) {
 				parseRegisterCmd(inputCmd);

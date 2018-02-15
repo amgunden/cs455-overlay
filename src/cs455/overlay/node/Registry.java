@@ -114,17 +114,17 @@ public class Registry implements Node{
 		address of the request (the socket’s input stream).
 		*/
 		
-		System.out.println("OverlayNodeSendsRegistration Message Received");
-		System.out.println("Nodes Server Socket is listening on: " + nodeRegistration.getServerSocketPort());
+		//System.out.println("OverlayNodeSendsRegistration Message Received");
+		//System.out.println("Nodes Server Socket is listening on: " + nodeRegistration.getServerSocketPort());
 		
 		try {
-			System.out.println( nodeRegistration.getInetAddress().toString());
+			//System.out.println( nodeRegistration.getInetAddress().toString());
 			
 			TCPConnection tcpConnection = tcpConCache.getTCPConByIpAddr( nodeRegistration.getInetAddress());
 			
 			RegistryReportsRegistrationStatus regMsg = null;
 			
-			if( tcpConnection == null) {
+			if( tcpConnection == null || tcpConnection.getSocket().isClosed()) {
 				System.out.println("Returned TCPConnection is null");
 			}
 			else if( registerMismatch(nodeRegistration, tcpConnection) ) {
@@ -155,7 +155,7 @@ public class Registry implements Node{
 			}
 			
 			tcpConnection.sendTCPMessage(regMsg.getBytes());
-			System.out.println("RegistryReportsRegistrationStatus Message Sent");
+			//System.out.println("RegistryReportsRegistrationStatus Message Sent");
 			
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -217,7 +217,7 @@ public class Registry implements Node{
 	
 	public void handleOverlaySetup(int numOfEntries) {
 		
-		// TODO Error if number of nodes < 2 * Nr (number of entries)
+		// Error if number of nodes < 2 * Nr (number of entries)
 		
 		numOfEntriesInRouting = numOfEntries;
 		
@@ -297,7 +297,7 @@ public class Registry implements Node{
 	public void handleOverlaySetupStatus(NodeReportsOverlaySetupStatus setupStatus) {
 		
 		if( setupStatus.getSuccessStatus() != -1) {
-			System.out.println("Node "+setupStatus.getSuccessStatus()+" has successfully setup connections to the nodes in it's routing table");
+			//System.out.println("Node "+setupStatus.getSuccessStatus()+" has successfully setup connections to the nodes in it's routing table");
 		}
 		else {
 			System.out.println("A node has failed to connect to the nodes listed in it's routing table");
@@ -372,7 +372,7 @@ public class Registry implements Node{
 		//System.out.println(nodesFinishedTask == numClients);
 		if( nodesFinishedTask == numClients ) {
 			try {
-				Thread.sleep(2000);
+				Thread.sleep(15000);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -384,7 +384,7 @@ public class Registry implements Node{
 	
 	public void requestTrafficSummary() throws IOException {
 		
-		System.out.println("requestTrafficSummary Entered");
+		//System.out.println("requestTrafficSummary Entered");
 		
 		RegistryRequestsTrafficSummary summaryReq = new RegistryRequestsTrafficSummary();
 		
@@ -394,12 +394,12 @@ public class Registry implements Node{
 		
 		trafficSumsReported =0;
 		
-		System.out.println("requestTrafficSummary Finished");
+		//System.out.println("requestTrafficSummary Finished");
 	}
 	
 	public void handleTrafficReports(OverlayNodeReportsTrafficSummary msg){
 		
-		System.out.println("handleTrafficSummary Entered");
+		//System.out.println("handleTrafficSummary Entered");
 		
 		int nodeId = msg.getNodeId();
 		
@@ -441,7 +441,7 @@ public class Registry implements Node{
 		
 		System.out.println();
 		System.out.printf("%-15s %-15s %-15s %-15s %-15s %-15s %n", "Sum", sumSent, sumRec, sumRelayed, sumPacSent, sumPacRec);
-		//System.out.println("Sum\t"+sumSent+"\t"+sumRec+"\t"+sumRelayed+"\t"+sumPacSent+"\t"+sumPacRec);
+		System.out.println();
 	}
 	
 	public void handleDeregistration(OverlayNodeSendsDeregistration msg) {
@@ -455,45 +455,49 @@ public class Registry implements Node{
 		
 		int index = tcpConCache.getIndexOfClientId(deregNodeId);
 		
+		RegistryReportsDeregistrationStatus deregStatus;
+		
 		if( index == -1) {
-			// TODO handle de-reg errors
+			// Handle de-reg errors
 			// Error: node was not found in clientConnections array
 			
 			// Send error de-registration status
+			deregStatus = new RegistryReportsDeregistrationStatus(-1, "De-Registration request successful. Messaging node was not found in the Client List");
 		}
-		
-		TCPConnection tcpCon = tcpConCache.getClientConnections().get(index);
-				
-		if( msg.getInetAddress() != tcpCon.getInetAddress().getAddress() ) {
+		else if( msg.getInetAddress() != tcpConCache.getClientConnections().get(index).getInetAddress().getAddress() ) {
 			// Error socket address doesnt match inet sent
+			deregStatus = new RegistryReportsDeregistrationStatus(-1, "De-Registration request unsuccessful. The address given does not match the address on file");
+		}
+		else {
+			
+			tcpConCache.removeClient(deregNodeId);
+			
+			// close the socket or have msgNode close it
+			
+			deregStatus = new RegistryReportsDeregistrationStatus(deregNodeId, "De-Registration request successful. The number of messaging nodes currently constituting the overlay is " + tcpConCache.getClientCount());
+			
+			try {
+				
+				tcpConCache.getClientConnections().get(index).sendTCPMessage( deregStatus.getBytes());
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			tcpConCache.getClientConnections().get(index).interuptTcpReceiver();
+			try {
+				tcpConCache.getClientConnections().get(index).closeSenderStream();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 		}
 		
-		tcpConCache.removeClient(deregNodeId);
+
 		
-		// close the socket or have msgNode close it
-		
-		RegistryReportsDeregistrationStatus deregStatus = new RegistryReportsDeregistrationStatus(deregNodeId, "De-Registration request successful. The number of messaging nodes currently constituting the overlay is " + tcpConCache.getClientCount());
-		
-		
-		try {
-			
-			tcpCon.sendTCPMessage( deregStatus.getBytes());
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		tcpCon.interuptTcpReceiver();
-		try {
-			tcpCon.closeSenderStream();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		System.out.println("RegistryReportsDeRegistrationStatus Message Sent");
+		//System.out.println("RegistryReportsDeRegistrationStatus Message Sent");
 		
 	}
 

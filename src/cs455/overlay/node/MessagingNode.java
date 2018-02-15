@@ -29,6 +29,11 @@ import cs455.overlay.wireformats.RegistrySendsNodeManifest;
 public class MessagingNode implements Node{
 	
 	int nodeID;
+	
+	public int getNodeID() {
+		return nodeID;
+	}
+
 	int serverSocketPort;
 	String registryHostname;
 	RoutingTable routingTable;
@@ -71,7 +76,7 @@ public class MessagingNode implements Node{
 		
 		
 	
-		System.out.println("Test");
+		//System.out.println("Test");
 
 		
 	}
@@ -82,11 +87,11 @@ public class MessagingNode implements Node{
 		//System.out.println("onEvent entered");
 		
 		if(event instanceof RegistryReportsRegistrationStatus) {
-			System.out.println("RegistryReportsRegistrationStatus Message Received");
+			//System.out.println("RegistryReportsRegistrationStatus Message Received");
 			handleRegStatus( (RegistryReportsRegistrationStatus) event);
 		} 
 		else if(event instanceof RegistrySendsNodeManifest) {
-			System.out.println("RegistrySendsNodeManifest Message Received");
+			//System.out.println("RegistrySendsNodeManifest Message Received");
 			try {
 				handleNodeManifest( (RegistrySendsNodeManifest) event);
 			} catch (IOException e) {
@@ -95,7 +100,7 @@ public class MessagingNode implements Node{
 			}
 		}
 		else if(event instanceof RegistryRequestsTaskInitiate) {
-			System.out.println("RegistryRequestsTaskInitiate Message Received");
+			//System.out.println("RegistryRequestsTaskInitiate Message Received");
 			try {
 				handleTaskInitiate( (RegistryRequestsTaskInitiate) event);
 			} catch (IOException e) {
@@ -133,12 +138,12 @@ public class MessagingNode implements Node{
 	
 	public void handleRegStatus(RegistryReportsRegistrationStatus regStatus) {
 		System.out.println( regStatus.getInfoMessage());
-		System.out.println( regStatus.getRegStatus());
+		//System.out.println( regStatus.getRegStatus());
 		
 		if(regStatus.getRegStatus() == -1) {
 			// Registration Error
-			// TODO Error Handling
-			System.out.println(regStatus.getInfoMessage());
+			// Error Handling
+			System.out.println("Registration error: "+regStatus.getInfoMessage());
 		}
 		else {
 			nodeID = regStatus.getRegStatus();
@@ -157,7 +162,16 @@ public class MessagingNode implements Node{
 		
 		boolean nodeConnectionSuccessful = connectToTableNodes();
 		
+		if(nodeConnectionSuccessful) {
+			System.out.println("Overlay successfully setup");
+		}
+		else {
+			System.out.println("Overlay not successfully setup");
+		}
+		
 		sendManifestReply(nodeConnectionSuccessful);
+		
+		
 		
 	}
 	
@@ -177,7 +191,7 @@ public class MessagingNode implements Node{
 			// Initiate registration to MessagingNode
 			Socket regSocket = TCPConnectionsCache.getInstance().createTCPConnection(routingTable.getRoutingEntries().get(i).getInetAddr(), routingTable.getRoutingEntries().get(i).getPort());;
 			
-			// TODO error detection
+			// Error detection
 			if(regSocket == null) {
 				// Socket failed to create
 				successful = false;
@@ -240,14 +254,14 @@ public class MessagingNode implements Node{
 	}
 		
 	public void sendDeregistrationMsg() {
-		System.out.println("Enter sendDereg");
+		//System.out.println("Enter sendDereg");
 		
 		int regIndex = tcpConCache.getIndexOfClientId(-1);
 		TCPConnection regCon = tcpConCache.getClientConnections().get(regIndex);
 		
 		OverlayNodeSendsDeregistration deRegMessage = new OverlayNodeSendsDeregistration( regCon.getSocket().getLocalAddress(), regCon.getSocket().getLocalPort(), nodeID);
 		tcpConCache.sendMessage(-1, deRegMessage.getBytes());
-		System.out.println("Deregistration Message sent to Reg");
+		//System.out.println("Deregistration Message sent to Reg");
 		
 	}
 	
@@ -255,6 +269,7 @@ public class MessagingNode implements Node{
 		
 		if(msg.getRegStatus() == -1) {
 			// error
+			System.out.println("De-Registration error: "+msg.getInfoMessage());
 		}
 		else {
 			// exit and terminate process
@@ -294,8 +309,8 @@ public class MessagingNode implements Node{
 			stats.incrementSend();
 			stats.addToSendSum(payload);
 			
-			System.out.println("Sending packet to "+ destNodeId+"; next hop "+ nextHop.getNodeId());
-			System.out.println();
+			//System.out.println("Sending packet to "+ destNodeId+"; next hop "+ nextHop.getNodeId());
+			//System.out.println();
 			
 		}
 		
@@ -335,14 +350,14 @@ public class MessagingNode implements Node{
 			
 			stats.incrementReceive();
 			stats.addToReceiveSum(dataMsg.getPayload());
-			System.out.println("Received packet from node "+ dataMsg.getSourceId());
-			System.out.println();
+			//System.out.println("Received packet from node "+ dataMsg.getSourceId());
+			//System.out.println();
 			
 		}
 		else {
 			
 			RoutingEntry nextHop = findNextHop(dataMsg.getDestId());
-			System.out.println("NextHop node: "+nextHop.getNodeId());
+			//System.out.println("NextHop node: "+nextHop.getNodeId());
 			int clientCon = tcpConCache.getIndexOfClientId( nextHop.getNodeId());
 			
 			dataMsg.addHop(nodeID);
@@ -351,8 +366,8 @@ public class MessagingNode implements Node{
 			
 			stats.incrementRelay();
 			
-			System.out.println("Relaying: src "+ dataMsg.getSourceId()+"; dest "+dataMsg.getDestId()+"; next Node "+ nextHop.getNodeId());
-			System.out.println();
+			//System.out.println("Relaying: src "+ dataMsg.getSourceId()+"; dest "+dataMsg.getDestId()+"; next Node "+ nextHop.getNodeId());
+			//System.out.println();
 		}
 		
 	}
@@ -364,6 +379,8 @@ public class MessagingNode implements Node{
 		OverlayNodeReportsTaskFinished msg = new OverlayNodeReportsTaskFinished( con.getInetAddress(), con.getPort(), nodeID);
 		
 		con.sendTCPMessage(msg.getBytes());
+		
+		//System.out.println("Sent Task Complete Message");
 		
 	}
 	
@@ -393,8 +410,9 @@ public class MessagingNode implements Node{
 	}
 	
 	public void printCtrAndDiag() {
-		System.out.println("Node ID: "+nodeID+": Packets Sent: "+stats.getSendTracker()+"; Packets Relayed: "+stats.getRelayTracker()+"; Packets Received: "+stats.getReceiveTracker());
-		System.out.println("Sent Sum: "+stats.getSendSummation()+"; Received Sum: "+stats.getReceiveSummation());
+		System.out.println();	
+		System.out.println("Node ID: "+nodeID+"\nPackets Sent: "+stats.getSendTracker()+"\nPackets Relayed: "+stats.getRelayTracker()+"\nPackets Received: "+stats.getReceiveTracker());
+		System.out.println("Sent Sum: "+stats.getSendSummation()+"\nReceived Sum: "+stats.getReceiveSummation());
 	}
 
 

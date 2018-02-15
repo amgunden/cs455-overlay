@@ -123,8 +123,8 @@ public class TCPConnectionsCache {
 		Socket newConnection = null;
 		
 		try {
-			System.out.println(addr.getHostAddress());
-			System.out.println(port);
+			//System.out.println(addr.getHostAddress());
+			//System.out.println(port);
 			newConnection = new Socket(addr, port);
 			addTCPConnection(newConnection);
 			

@@ -117,11 +117,20 @@ public class TCPConnection {
 					handleReceivedMessage(data);	
 					
 				} catch (SocketException se) {
-					System.out.println("TCP Receiver Thread SocketException. Message: " +se.getMessage());
+					//System.out.println("TCP Receiver Thread SocketException. Message: " +se.getMessage());
 					break;
 				} catch (IOException ioe) {
-					ioe.printStackTrace();
-					System.out.println("TCP Receiver Thread IOException. Message: " +  ioe.toString()) ;
+					//ioe.printStackTrace();
+					//System.out.println("TCP Receiver Thread IOException. Message: " +  ioe.toString()) ;
+					try {
+						din.close();
+						socket.close();
+						System.out.println("Connection to node: "+nodeID+" ("+socket.getInetAddress().getHostName()+":"+socket.getPort() +") has been lost");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
 					break;
 				}
 			}
